@@ -1,22 +1,336 @@
 import os
 import sys
 import json
+import platform
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QGroupBox, QFormLayout, QCheckBox, QComboBox,
-    QTableWidget, QTableWidgetItem, QHeaderView
+    QTableWidget, QTableWidgetItem, QHeaderView, QDialog
 )
 from PyQt6.QtCore import Qt, QSettings, QSize
 from PyQt6.QtGui import QIcon, QPixmap
 
 # Sample configuration constants
 WINDOW_SIZE = (600, 500)
-WINDOW_TITLE = "Sample SuperCut UI"
+WINDOW_TITLE = "Sample chrome UI"
 ICON_PATH = "src/sources/icon.png"
 PROJECT_ROOT = "."
 
-# Sample stylesheet with correct colors matching SuperCut
+class CustomMessageBox(QDialog):
+    """Custom message box dialog with consistent styling"""
+    
+    def __init__(self, parent=None, title="Message", message="", message_type="info"):
+        super().__init__(parent)
+        
+        # Performance optimizations for smoother dialog
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
+        
+        self.setWindowTitle(title)
+        self.setModal(True)
+        self.setMinimumSize(300, 200)
+        self.setMaximumSize(300, 200)
+        self.resize(300, 200)
+        self.message_type = message_type
+        self.init_ui(title, message)
+        
+    def init_ui(self, title, message):
+        """Initialize the dialog UI"""
+        self.setStyleSheet(f"""
+            QDialog {{
+                background: #f5f7fa;
+                border-radius: 10px;
+            }}
+            QLabel#iconLabel {{
+                font-size: 30px;
+                color: {self.get_icon_color()};
+                margin: 0;
+                padding: 0;
+            }}
+            QLabel#titleLabel {{
+                font-size: 15px;
+                color: #000000;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }}
+            QLabel#messageLabel {{
+                font-size: 14px;
+                color: #222;
+                font-weight: 500;
+                margin-top: 4px;
+                margin-bottom: 4px;
+                line-height: 1.4;
+            }}
+            QPushButton {{
+                background-color: {self.get_button_color()};
+                color: white;
+                font-size: 13px;
+                padding: 7px 18px;
+                border-radius: 6px;
+                margin-top: 8px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.get_button_hover_color()};
+            }}
+        """)
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 15, 0, 25)
+        layout.setSpacing(0)
+
+        # Icon
+        icon = QLabel(self.get_icon_text())
+        icon.setObjectName("iconLabel")
+        icon.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(icon)
+
+        # Title
+        title_label = QLabel(title)
+        title_label.setObjectName("titleLabel")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(title_label)
+
+        # Message
+        message_label = QLabel(message)
+        message_label.setObjectName("messageLabel")
+        message_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        message_label.setWordWrap(True)
+        layout.addWidget(message_label)
+
+        # Buttons row
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        # OK button
+        ok_btn = QPushButton("OK")
+        ok_btn.setFixedWidth(100)  # Set specific width and height
+        ok_btn.setDefault(True)
+        ok_btn.clicked.connect(self.accept)
+        btn_row.addWidget(ok_btn)
+        btn_row.addStretch()
+        layout.addLayout(btn_row)
+
+        # Shortcut
+        from PyQt6.QtGui import QShortcut, QKeySequence
+        QShortcut(QKeySequence("Ctrl+W"), self, self.close)
+        self.adjustSize()
+        
+    def get_icon_text(self):
+        """Get icon text based on message type"""
+        icons = {
+            "info": "ℹ",
+            "success": "✓",
+            "warning": "⚠️", 
+            "error": "✕"
+        }
+        return icons.get(self.message_type, "ℹ")
+        
+    def get_icon_color(self):
+        """Get icon color based on message type"""
+        colors = {
+            "info": "#4a90e2",
+            "success": "#28a745",
+            "warning": "#e67e22", 
+            "error": "#dc3545"
+        }
+        return colors.get(self.message_type, "#4a90e2")
+        
+    def get_button_color(self):
+        """Get button color based on message type"""
+        colors = {
+            "info": "#4a90e2",
+            "success": "#28a745",
+            "warning": "#e67e22",
+            "error": "#dc3545"
+        }
+        return colors.get(self.message_type, "#4a90e2")
+        
+    def get_button_hover_color(self):
+        """Get button hover color based on message type"""
+        colors = {
+            "info": "#357ABD",
+            "success": "#218838", 
+            "warning": "#d35400",
+            "error": "#c82333"
+        }
+        return colors.get(self.message_type, "#357ABD")
+    
+    @staticmethod
+    def show_info(parent, title, message):
+        """Show info message box"""
+        dialog = CustomMessageBox(parent, title, message, "info")
+        dialog.exec()
+        
+    @staticmethod
+    def show_success(parent, title, message):
+        """Show success message box"""
+        dialog = CustomMessageBox(parent, title, message, "success")
+        dialog.exec()
+        
+    @staticmethod
+    def show_warning(parent, title, message):
+        """Show warning message box"""
+        dialog = CustomMessageBox(parent, title, message, "warning")
+        dialog.exec()
+        
+    @staticmethod
+    def show_error(parent, title, message):
+        """Show error message box"""
+        dialog = CustomMessageBox(parent, title, message, "error")
+        dialog.exec()
+
+
+class EditProfileDialog(QDialog):
+    """Dialog for editing profile information"""
+    
+    def __init__(self, parent=None, profile_data=None):
+        super().__init__(parent)
+        self.profile_data = profile_data or {}
+        self.setWindowTitle("Edit Profile")
+        self.setFixedSize(400, 300)
+        self.setModal(True)
+        self.init_ui()
+        
+    def init_ui(self):
+        """Initialize the dialog UI"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+        
+        # Title
+        title_label = QLabel("Edit Profile")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 10px;
+        """)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title_label)
+        
+        # Form layout
+        form_layout = QFormLayout()
+        form_layout.setSpacing(10)
+        
+        # Name field
+        self.name_edit = QLineEdit()
+        self.name_edit.setText(self.profile_data.get('name', ''))
+        self.name_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 8px 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Name:", self.name_edit)
+        
+        # Profile field (read-only)
+        self.profile_edit = QLineEdit()
+        self.profile_edit.setText(self.profile_data.get('profile', ''))
+        self.profile_edit.setReadOnly(True)  # Make it read-only
+        self.profile_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 8px 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: #f8f9fa;
+                color: #6c757d;
+            }
+        """)
+        form_layout.addRow("Profile:", self.profile_edit)
+        
+        # Type field
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(["user_custom", "Chrome Profile", "Standard", "Premium", "Basic"])
+        self.type_combo.setCurrentText(self.profile_data.get('type', 'user_custom'))
+        self.type_combo.setStyleSheet("""
+            QComboBox {
+                padding: 8px 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Type:", self.type_combo)
+        
+        # Profile ID field (read-only for Chrome profiles)
+        self.profile_id_edit = QLineEdit()
+        self.profile_id_edit.setText(self.profile_data.get('profile_id', ''))
+        self.profile_id_edit.setReadOnly(True)  # Make it read-only
+        self.profile_id_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 8px 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: #f8f9fa;
+                color: #6c757d;
+            }
+        """)
+        form_layout.addRow("Profile ID:", self.profile_id_edit)
+        
+        layout.addLayout(form_layout)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        # Cancel button
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setFixedSize(100, 35)
+        cancel_btn.clicked.connect(self.reject)
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #6c757d;
+                color: white;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #5a6268;
+            }
+        """)
+        
+        # Save button
+        save_btn = QPushButton("Save")
+        save_btn.setFixedSize(100, 35)
+        save_btn.clicked.connect(self.accept)
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+        """)
+        
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+        layout.addLayout(button_layout)
+        
+        # Add keyboard shortcuts
+        from PyQt6.QtGui import QShortcut, QKeySequence
+        QShortcut(QKeySequence("Ctrl+W"), self, self.close)
+        
+    def get_profile_data(self):
+        """Get the edited profile data"""
+        return {
+            'name': self.name_edit.text().strip(),
+            'profile': self.profile_edit.text().strip(),
+            'type': self.type_combo.currentText(),
+            'profile_id': self.profile_id_edit.text().strip()
+        }
+
+# Sample stylesheet with correct colors matching chrome
 STYLE_SHEET = """
 QWidget {
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -155,14 +469,15 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 }
 """
 
-class SampleSuperCutUI(QWidget):
-    """Sample main application window demonstrating SuperCut UI structure"""
+class SamplechromeUI(QWidget):
+    """Sample main application window demonstrating chrome UI structure"""
     
     def __init__(self):
         super().__init__()
-        self.settings = QSettings('SampleSuperCut', 'SampleSuperCutUI')
+        self.settings = QSettings('Samplechrome', 'SamplechromeUI')
         self.profiles = self.load_profiles()
         self.init_ui()
+        self.load_window_position()
 
     def load_profiles(self):
         """Load profiles from profile.json file"""
@@ -174,6 +489,54 @@ class SampleSuperCutUI(QWidget):
             print(f"Error loading profiles: {e}")
             return []
 
+    def get_chrome_profiles(self):
+        """Get Chrome profiles from the default Chrome user data directory"""
+        chrome_profiles = []
+        
+        # Determine Chrome user data directory based on OS
+        system = platform.system()
+        if system == "Windows":
+            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+        elif system == "Darwin":  # macOS
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+        else:  # Linux
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+        
+        # Check if Chrome data directory exists
+        if not os.path.exists(chrome_data_dir):
+            return chrome_profiles
+        
+        # Look for Local State file to get profile info
+        local_state_path = os.path.join(chrome_data_dir, 'Local State')
+        if os.path.exists(local_state_path):
+            try:
+                with open(local_state_path, 'r', encoding='utf-8') as f:
+                    local_state = json.load(f)
+                    profile_info = local_state.get('profile', {}).get('info_cache', {})
+                    
+                    for profile_id, profile_data in profile_info.items():
+                        profile_name = profile_data.get('name', f'Profile {profile_id}')
+                        chrome_profiles.append({
+                            'name': '',
+                            'profile': profile_name,
+                            'type': 'user_custom',
+                            'profile_id': profile_id
+                        })
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Error reading Chrome profiles: {e}")
+        
+        return chrome_profiles
+
+    def save_profiles(self, profiles):
+        """Save profiles to profile.json file"""
+        try:
+            with open('profile.json', 'w', encoding='utf-8') as file:
+                json.dump({'profiles': profiles}, file, indent=2, ensure_ascii=False)
+            return True
+        except Exception as e:
+            print(f"Error saving profiles: {e}")
+            return False
+
     def init_ui(self):
         """Initialize the user interface"""
         # Set window properties
@@ -182,9 +545,13 @@ class SampleSuperCutUI(QWidget):
         self.resize(WINDOW_SIZE[0], WINDOW_SIZE[1])
         self.setStyleSheet(STYLE_SHEET)
         
+        # Add keyboard shortcuts
+        from PyQt6.QtGui import QShortcut, QKeySequence
+        QShortcut(QKeySequence("Ctrl+W"), self, self.close)
+        
         # Create main layout
         layout = QVBoxLayout()
-        layout.setContentsMargins(14, 18, 0, 2)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         # --- TITLE AREA ---
@@ -193,15 +560,12 @@ class SampleSuperCutUI(QWidget):
         # --- SCROLLABLE CONTENT AREA ---
         self.create_scrollable_content(layout)
         
-        # --- BOTTOM ACTION AREA ---
-        self.create_bottom_action_area(layout)
-        
         self.setLayout(layout)
 
     def create_title_area(self, layout):
         """Create the title area with icon and app name"""
         title_widget = QtWidgets.QWidget()
-        title_widget.setFixedHeight(70)
+        title_widget.setFixedHeight(50)
         title_widget.setStyleSheet("background-color: transparent;")
         
         # Title icon
@@ -215,12 +579,12 @@ class SampleSuperCutUI(QWidget):
             title_icon.setStyleSheet("font-size: 45px; background-color: transparent;")
         
         # Title label
-        title_label = QLabel("SuperCut")
-        title_label.setStyleSheet("font-size: 35px; font-weight: bold; background-color: transparent; color: #333333;")
+        title_label = QLabel("Simple Chrome")
+        title_label.setStyleSheet("font-size: 28px; font-weight: bold; background-color: transparent; color: #333333;")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Static icon (placeholder)
-        static_icon = QLabel("📹")
+        static_icon = QLabel("")
         static_icon.setStyleSheet("font-size: 24px; background-color: transparent;")
         static_icon.setVisible(True)
         
@@ -239,7 +603,6 @@ class SampleSuperCutUI(QWidget):
         title_widget.setLayout(title_layout)
         
         layout.addWidget(title_widget)
-        layout.addSpacing(0)
 
 
 
@@ -263,7 +626,7 @@ class SampleSuperCutUI(QWidget):
         scroll_content = QtWidgets.QWidget()
         scroll_content.setStyleSheet("background-color: transparent;")
         scroll_layout = QVBoxLayout(scroll_content)
-        scroll_layout.setContentsMargins(8, 0, 32, 0)
+        scroll_layout.setContentsMargins(20, 0, 20, 0)
         scroll_layout.setSpacing(10)
         
         # Add profiles section
@@ -271,6 +634,11 @@ class SampleSuperCutUI(QWidget):
         
         # Set the scroll content widget
         scroll_area.setWidget(scroll_content)
+        
+        # Set height constraints for the scroll area
+        scroll_area.setMinimumHeight(200)
+        scroll_area.setMaximumHeight(414)  # Limit maximum height to prevent taking too much space
+        
         layout.addWidget(scroll_area)
         
         # Store scroll area reference
@@ -280,8 +648,8 @@ class SampleSuperCutUI(QWidget):
         """Create the profiles display section"""
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
-        self.profiles_table.setColumnCount(3)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Type"])
+        self.profiles_table.setColumnCount(5)
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Type", "Profile ID"])
         
         # Set table properties
         self.profiles_table.setAlternatingRowColors(False)
@@ -291,11 +659,24 @@ class SampleSuperCutUI(QWidget):
         # Hide the row selection indicator column (first column)
         self.profiles_table.verticalHeader().setVisible(False)
         
+        # Make header row fixed (non-scrollable)
+        self.profiles_table.horizontalHeader().setStretchLastSection(True)
+        self.profiles_table.horizontalHeader().setFixedHeight(35)  # Match the header height we set earlier
+        
+        # Set scroll mode to ensure header stays fixed
+        self.profiles_table.setVerticalScrollMode(QTableWidget.ScrollMode.ScrollPerPixel)
+        
+        # Set scroll bar policies
+        self.profiles_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.profiles_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        
         # Set header properties
         header = self.profiles_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # Number
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Name
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Type
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # Profile
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Type
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
         
         # Set table style
         self.profiles_table.setStyleSheet("""
@@ -307,6 +688,7 @@ class SampleSuperCutUI(QWidget):
                 outline: none;
                 selection-background-color: #4a90e2;
                 selection-color: white;
+                gridline-color: #e0e0e0;
             }
             QTableWidget::item {
                 padding: 12px 8px;
@@ -322,9 +704,6 @@ class SampleSuperCutUI(QWidget):
                 color: white;
                 border-bottom: 1px solid #4a90e2;
             }
-            QTableWidget::item:selected:hover {
-                background-color: #357ABD;
-            }
             QHeaderView::section {
                 background-color: #f8f9fa;
                 padding: 4px 8px;
@@ -334,13 +713,15 @@ class SampleSuperCutUI(QWidget):
                 font-weight: bold;
                 color: #495057;
                 font-size: 13px;
+                position: sticky;
+                top: 0;
             }
             QHeaderView::section:first {
-                border-top-left-radius: 6px;
+                border-top-left-radius: 0px;
             }
             QHeaderView::section:last {
-                border-top-right-radius: 6px;
-                border-right: none;
+                border-top-right-radius: 0px;
+                border-right: 1px solid #e9ecef;
             }
             QTableCornerButton::section {
                 background-color: #f8f9fa;
@@ -363,24 +744,101 @@ class SampleSuperCutUI(QWidget):
         # Populate table with profile data
         self.populate_profiles_table()
         
+        # Ensure the table scrolls properly from the first data row
+        if self.profiles_table.rowCount() > 0:
+            # Set the table to show the first data row at the top
+            self.profiles_table.scrollToItem(self.profiles_table.item(0, 0))
+            
+                        # Set the vertical scroll bar to start from the first data row
+            header_height = self.profiles_table.horizontalHeader().height()
+            self.profiles_table.verticalScrollBar().setRange(0, self.profiles_table.rowCount() * 50)  # Approximate row height
+            
+            # Force the table to update its scroll area
+            self.profiles_table.updateGeometry()
+        
+        # Add buttons layout
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(10)
+        
         # Add refresh button
         refresh_btn = QPushButton("Refresh Profiles")
         refresh_btn.setFixedSize(120, 30)
         refresh_btn.clicked.connect(self.refresh_profiles)
         refresh_btn.setStyleSheet("""
             QPushButton {
-                background-color: #6c757d;
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                border: 2px solid #47a4ff;
+            }
+        """)
+        
+        # Add collect Chrome profiles button
+        chrome_btn = QPushButton("Collect Profiles")
+        chrome_btn.setFixedSize(120, 30)
+        chrome_btn.clicked.connect(self.collect_chrome_profiles)
+        chrome_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                border: 2px solid #47a4ff;
+            }
+        """)
+        
+        # Add launch button
+        launch_btn = QPushButton("Launch")
+        launch_btn.setFixedSize(100, 30)
+        launch_btn.clicked.connect(self.launch_selected_profile)
+        launch_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #4a90e2;
                 color: white;
                 border-radius: 4px;
                 padding: 4px 8px;
             }
             QPushButton:hover {
-                background-color: #5a6268;
+                background-color: #357ABD;
             }
         """)
         
+        # Add edit button
+        edit_btn = QPushButton("Edit")
+        edit_btn.setFixedSize(80, 30)
+        edit_btn.clicked.connect(self.edit_selected_profile)
+        edit_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ffc107;
+                color: #333333;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background-color: #e0a800;
+            }
+        """)
+        
+        buttons_layout.addWidget(chrome_btn)
+        buttons_layout.addWidget(refresh_btn)
+        buttons_layout.addStretch()
+        buttons_layout.addWidget(edit_btn)
+        buttons_layout.addWidget(launch_btn)
+  
         layout.addWidget(self.profiles_table)
-        layout.addWidget(refresh_btn)
+        layout.addSpacing(1)
+        layout.addLayout(buttons_layout)
+        layout.addSpacing(4)  # Add space between table and buttons
 
     def populate_profiles_table(self):
         """Populate the profiles table with data from profile.json"""
@@ -396,16 +854,173 @@ class SampleSuperCutUI(QWidget):
             name_item = QTableWidgetItem(profile.get('name', ''))
             self.profiles_table.setItem(row, 1, name_item)
             
+            # Profile
+            profile_name = profile.get('profile', '')
+            profile_item = QTableWidgetItem(profile_name)
+            self.profiles_table.setItem(row, 2, profile_item)
+            
             # Type
             type_item = QTableWidgetItem(profile.get('type', ''))
             type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 2, type_item)
+            self.profiles_table.setItem(row, 3, type_item)
+            
+            # Profile ID
+            profile_id = profile.get('profile_id', '')
+            profile_id_item = QTableWidgetItem(profile_id)
+            profile_id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.profiles_table.setItem(row, 4, profile_id_item)
 
     def refresh_profiles(self):
         """Refresh the profiles table with updated data from profile.json"""
         self.profiles = self.load_profiles()
         self.populate_profiles_table()
         print("Profiles refreshed successfully!")
+
+    def collect_chrome_profiles(self):
+        """Collect Chrome profiles and add them to the existing profiles"""
+        chrome_profiles = self.get_chrome_profiles()
+        
+        if not chrome_profiles:
+            CustomMessageBox.show_info(self, "No Chrome Profiles", 
+                                     "No Chrome profiles found. Make sure Chrome is installed and has been used at least once.")
+            return
+        
+        # Check for duplicates
+        existing_names = {profile.get('name', '') for profile in self.profiles}
+        new_profiles = []
+        
+        for chrome_profile in chrome_profiles:
+            if chrome_profile['name'] not in existing_names:
+                new_profiles.append(chrome_profile)
+        
+        if not new_profiles:
+            CustomMessageBox.show_info(self, "No New Profiles", 
+                                     "All profiles already added.")
+            return
+        
+        # Add new profiles to existing list
+        self.profiles.extend(new_profiles)
+        
+        # Save to file
+        if self.save_profiles(self.profiles):
+            self.populate_profiles_table()
+            CustomMessageBox.show_success(self, "Success", 
+                                        f"Added {len(new_profiles)} Chrome profile(s) to the list.")
+        else:
+            CustomMessageBox.show_error(self, "Error", 
+                                      "Failed to save profiles to file.")
+
+    def load_window_position(self):
+        """Load the last saved window position and size"""
+        geometry = self.settings.value('geometry')
+        if geometry:
+            self.restoreGeometry(geometry)
+        else:
+            # Default position if no saved position exists
+            self.resize(WINDOW_SIZE[0], WINDOW_SIZE[1])
+            self.center_window()
+    
+    def save_window_position(self):
+        """Save the current window position and size"""
+        self.settings.setValue('geometry', self.saveGeometry())
+    
+    def center_window(self):
+        """Center the window on the screen"""
+        screen = QApplication.primaryScreen().geometry()
+        x = (screen.width() - self.width()) // 2
+        y = (screen.height() - self.height()) // 2
+        self.move(x, y)
+    
+    def closeEvent(self, event):
+        """Override close event to save window position"""
+        self.save_window_position()
+        event.accept()
+
+    def launch_selected_profile(self):
+        """Launch the selected Chrome profile"""
+        current_row = self.profiles_table.currentRow()
+        
+        if current_row < 0:
+            CustomMessageBox.show_warning(self, "No Selection", 
+                                        "Please select a profile to launch.")
+            return
+        
+        if current_row >= len(self.profiles):
+            CustomMessageBox.show_error(self, "Error", 
+                                      "Invalid profile selection.")
+            return
+        
+        selected_profile = self.profiles[current_row]
+        profile_id = selected_profile.get('profile_id', '')
+        profile_name = selected_profile.get('name', '') or selected_profile.get('profile', '')
+        
+        if not profile_id:
+            CustomMessageBox.show_warning(self, "No Profile ID", 
+                                        "Selected profile does not have a valid profile ID.")
+            return
+        
+        try:
+            # Launch Chrome with the selected profile
+            import subprocess
+            import platform
+            
+            system = platform.system()
+            if system == "Windows":
+                chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+                if not os.path.exists(chrome_path):
+                    chrome_path = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+            elif system == "Darwin":  # macOS
+                chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            else:  # Linux
+                chrome_path = "google-chrome"
+            
+            if not os.path.exists(chrome_path) and system != "Linux":
+                CustomMessageBox.show_error(self, "Chrome Not Found", 
+                                          "Google Chrome is not installed or not found in the default location.")
+                return
+            
+            # Launch Chrome with the profile
+            cmd = [chrome_path, f"--profile-directory={profile_id}"]
+            subprocess.Popen(cmd)
+            
+            # No success dialog needed - profile launches silently
+            
+        except Exception as e:
+            CustomMessageBox.show_error(self, "Launch Error", 
+                                      f"Failed to launch Chrome profile: {str(e)}")
+
+    def edit_selected_profile(self):
+        """Edit the selected profile"""
+        current_row = self.profiles_table.currentRow()
+        
+        if current_row < 0:
+            CustomMessageBox.show_warning(self, "No Selection", 
+                                        "Please select a profile to edit.")
+            return
+        
+        if current_row >= len(self.profiles):
+            CustomMessageBox.show_error(self, "Error", 
+                                      "Invalid profile selection.")
+            return
+        
+        selected_profile = self.profiles[current_row]
+        
+        # Show edit dialog
+        dialog = EditProfileDialog(self, selected_profile)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # Get edited data
+            edited_data = dialog.get_profile_data()
+            
+            # Update the profile
+            self.profiles[current_row].update(edited_data)
+            
+            # Save to file
+            if self.save_profiles(self.profiles):
+                self.populate_profiles_table()
+                # No success dialog needed - profile updates silently
+            else:
+                CustomMessageBox.show_error(self, "Error", 
+                                          "Failed to save profile changes.")
 
     def create_bottom_action_area(self, layout):
         """Create the bottom action area with buttons"""
@@ -424,7 +1039,7 @@ def main():
     app = QApplication(sys.argv)
     
     # Create and show the main window
-    window = SampleSuperCutUI()
+    window = SamplechromeUI()
     window.show()
     
     # Run the application
