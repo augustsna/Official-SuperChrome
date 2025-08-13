@@ -42,7 +42,7 @@ class ModernApp(QMainWindow):
         title_label = QLabel("Lucky Chrome")
         title_label.setObjectName("app-title")
         title_font = QFont()
-        title_font.setPointSize(24)
+        title_font.setPointSize(20)
         title_font.setBold(True)
         title_label.setFont(title_font)
         
@@ -62,58 +62,13 @@ class ModernApp(QMainWindow):
         body_layout.setContentsMargins(30, 20, 30, 20)
         body_layout.setSpacing(20)
         
-        # Welcome section
-        welcome_label = QLabel("Welcome to Your Modern Application")
-        welcome_label.setObjectName("welcome-title")
-        welcome_font = QFont()
-        welcome_font.setPointSize(24)
-        welcome_font.setBold(True)
-        welcome_label.setFont(welcome_font)
-        welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        # Description
-        desc_label = QLabel("This is a modern PyQt6 application with a clean header, body, and footer layout. "
-                           "The design follows modern UI principles with proper spacing and typography.")
-        desc_label.setObjectName("description")
-        desc_label.setWordWrap(True)
-        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        # Content area
-        content_label = QLabel("Main Content Area")
-        content_label.setObjectName("content-title")
-        content_font = QFont()
-        content_font.setPointSize(16)
-        content_font.setBold(True)
-        content_label.setFont(content_font)
-        
-        # Text area for content
-        self.text_area = QTextEdit()
-        self.text_area.setObjectName("text-area")
-        self.text_area.setPlaceholderText("Enter your content here...")
-        self.text_area.setMaximumHeight(200)
-        
-        # Action buttons
-        button_layout = QHBoxLayout()
-        button_layout.setSpacing(15)
-        
-        action_btn1 = QPushButton("Action 1")
-        action_btn1.setObjectName("action-button")
-        action_btn2 = QPushButton("Action 2")
-        action_btn2.setObjectName("action-button")
-        action_btn3 = QPushButton("Action 3")
-        action_btn3.setObjectName("action-button")
-        
-        button_layout.addWidget(action_btn1)
-        button_layout.addWidget(action_btn2)
-        button_layout.addWidget(action_btn3)
-        button_layout.addStretch()
-        
-        body_layout.addWidget(welcome_label)
-        body_layout.addWidget(desc_label)
-        body_layout.addStretch()
-        body_layout.addWidget(content_label)
-        body_layout.addWidget(self.text_area)
-        body_layout.addLayout(button_layout)
+        # Body area is now empty but ready for content
+        # Design preserved for later use:
+        # - Welcome section with centered title (welcome-title)
+        # - Description text with word wrap (description)
+        # - Content area with title (content-title)
+        # - Text area for input (text-area)
+        # - Action buttons layout (action-button)
         
         self.main_layout.addWidget(self.body)
         
