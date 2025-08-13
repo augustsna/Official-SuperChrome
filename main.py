@@ -32,38 +32,23 @@ class ModernApp(QMainWindow):
         """Create the header area with title and navigation"""
         self.header = QFrame()
         self.header.setObjectName("header")
-        self.header.setFixedHeight(60)
+        self.header.setFixedHeight(80)
         self.header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
         header_layout = QHBoxLayout(self.header)
         header_layout.setContentsMargins(20, 10, 20, 10)
         
         # App title
-        title_label = QLabel("Modern PyQt6 App")
+        title_label = QLabel("Lucky Chrome")
         title_label.setObjectName("app-title")
         title_font = QFont()
-        title_font.setPointSize(18)
+        title_font.setPointSize(24)
         title_font.setBold(True)
         title_label.setFont(title_font)
         
-        # Navigation buttons
-        nav_layout = QHBoxLayout()
-        nav_layout.setSpacing(10)
-        
-        home_btn = QPushButton("Home")
-        home_btn.setObjectName("nav-button")
-        about_btn = QPushButton("About")
-        about_btn.setObjectName("nav-button")
-        settings_btn = QPushButton("Settings")
-        settings_btn.setObjectName("nav-button")
-        
-        nav_layout.addWidget(home_btn)
-        nav_layout.addWidget(about_btn)
-        nav_layout.addWidget(settings_btn)
-        nav_layout.addStretch()
-        
+        header_layout.addStretch()
         header_layout.addWidget(title_label)
-        header_layout.addLayout(nav_layout)
+        header_layout.addStretch()
         
         self.main_layout.addWidget(self.header)
         
@@ -136,7 +121,7 @@ class ModernApp(QMainWindow):
         """Create the footer area with status and info"""
         self.footer = QFrame()
         self.footer.setObjectName("footer")
-        self.footer.setFixedHeight(50)
+        self.footer.setFixedHeight(35)
         self.footer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
         footer_layout = QHBoxLayout(self.footer)
@@ -169,12 +154,12 @@ class ModernApp(QMainWindow):
         }
         
         #header {
-            background-color: #4a90e2;
-            border-bottom: 1px solid #357abd;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
         }
         
         #app-title {
-            color: white;
+            color: #4a90e2;
         }
         
         #nav-button {
