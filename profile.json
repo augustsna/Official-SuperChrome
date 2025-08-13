@@ -1,0 +1,24 @@
+{
+  "profiles": [
+    {
+      "name": "John Doe",
+      "type": "Premium"
+    },
+    {
+      "name": "Jane Smith",
+      "type": "Standard"
+    },
+    {
+      "name": "Bob Johnson",
+      "type": "Basic"
+    },
+    {
+      "name": "Alice Brown",
+      "type": "Premium"
+    },
+    {
+      "name": "Charlie Wilson",
+      "type": "Standard"
+    }
+  ]
+}

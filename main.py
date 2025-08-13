@@ -1,409 +1,434 @@
+import os
 import sys
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                             QHBoxLayout, QLabel, QPushButton, QTextEdit, 
-                             QFrame, QSizePolicy, QScrollArea, QLineEdit)
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QFont, QPalette, QColor
+import json
+from PyQt6 import QtWidgets
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QScrollArea, QGroupBox, QFormLayout, QCheckBox, QComboBox,
+    QTableWidget, QTableWidgetItem, QHeaderView
+)
+from PyQt6.QtCore import Qt, QSettings, QSize
+from PyQt6.QtGui import QIcon, QPixmap
 
+# Sample configuration constants
+WINDOW_SIZE = (600, 500)
+WINDOW_TITLE = "Sample SuperCut UI"
+ICON_PATH = "src/sources/icon.png"
+PROJECT_ROOT = "."
 
-class ModernApp(QMainWindow):
+# Sample stylesheet with correct colors matching SuperCut
+STYLE_SHEET = """
+QWidget {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: #333333;
+    background-color: #f5f7fa;
+}
+
+QGroupBox {
+    font-weight: bold;
+    border: 2px solid #cccccc;
+    border-radius: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    background-color: white;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px 0 5px;
+    color: #333333;
+}
+
+QPushButton {
+    background-color: #4a90e2;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 12px;
+}
+
+QPushButton:hover {
+    background-color: #357ABD;
+}
+
+QLineEdit {
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #333;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+QLineEdit:hover {
+    border: 2px solid #4a90e2;
+    background-color: #ffffff;
+}
+
+QComboBox {
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #333;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+QComboBox:hover {
+    border: 2px solid #4687f4;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 0px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border: none;
+    width: 0px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #ffffff;
+    selection-background-color: #3f92e3;
+    border: 1px solid #ccc;
+    outline: none;
+}
+
+QCheckBox {
+    spacing: 8px;
+    font-size: 13px;
+    color: #333;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #ffffff;
+}
+
+QCheckBox::indicator:hover {
+    background: #f5f9ff;
+}
+
+QCheckBox::indicator:unchecked {
+    background: #ffffff;
+    border: 1px solid #ccc;
+}
+
+QCheckBox::indicator:unchecked:hover {
+    background: #f5f9ff;
+}
+
+QCheckBox::indicator:checked {
+    background: #ffffff;
+    border: 1px solid #ccc;
+    image: url(src/sources/black_tick.svg);
+}
+
+QScrollBar:vertical {
+    background: rgba(240, 240, 240, 0.20);
+    width: 12px;
+    border-radius: 6px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(192, 192, 192, 0.20);
+    border-radius: 6px;
+    min-height: 20px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: rgba(160, 160, 160, 0.35);
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+"""
+
+class SampleSuperCutUI(QWidget):
+    """Sample main application window demonstrating SuperCut UI structure"""
+    
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Modern PyQt6 Application")
-        self.setGeometry(100, 100, 800, 600)
-        self.setMinimumSize(600, 400)
-        
-        # Set up the main widget and layout
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.main_layout = QVBoxLayout(self.central_widget)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(0)
-        
-        # Create the three main areas
-        self.create_header()
-        self.create_body()
-        self.create_footer()
-        
-        # Apply modern styling
-        self.apply_styles()
-        
-    def create_header(self):
-        """Create the header area with title and navigation"""
-        self.header = QFrame()
-        self.header.setObjectName("header")
-        self.header.setFixedHeight(80)
-        self.header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        
-        header_layout = QHBoxLayout(self.header)
-        header_layout.setContentsMargins(20, 10, 20, 10)
-        
-        # App title
-        title_label = QLabel("Lucky Chrome")
-        title_label.setObjectName("app-title")
-        title_font = QFont("Segoe UI", 22)
-        title_font.setBold(True)
-        title_label.setFont(title_font)
-        
-        header_layout.addStretch()
-        header_layout.addWidget(title_label)
-        header_layout.addStretch()
-        
-        self.main_layout.addWidget(self.header)
-        
-    def create_body(self):
-        """Create the main body area with content"""
-        self.body = QFrame()
-        self.body.setObjectName("body")
-        self.body.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        
-        body_layout = QVBoxLayout(self.body)
-        body_layout.setContentsMargins(30, 10, 30, 20)
-        body_layout.setSpacing(15)
-        
-        # Search and Filter Section
-        search_filter_layout = QHBoxLayout()
-        search_filter_layout.setSpacing(15)
-        search_filter_layout.setContentsMargins(0, 5, 0, 5)
-        
-        # Search input
-        search_input = QLineEdit()
-        search_input.setObjectName("text-area")
-        search_input.setPlaceholderText("Search...")
-        search_input.setFixedSize(120, 25)
-        search_input.setFont(QFont("Segoe UI", 9))
-        
-        # Filter button
-        filter_btn = QPushButton("Filter")
-        filter_btn.setObjectName("action-button")
-        filter_btn.setFixedSize(50, 25)
-        filter_btn.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
-        
-        # Category button
-        category_btn = QPushButton("Category")
-        category_btn.setObjectName("action-button")
-        category_btn.setFixedSize(70, 25)
-        category_btn.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
-        
-        search_filter_layout.addWidget(search_input)
-        search_filter_layout.addWidget(filter_btn)
-        search_filter_layout.addWidget(category_btn)
-        search_filter_layout.addStretch()
-        
-        # Scroll Area for List
-        scroll_area = QScrollArea()
-        scroll_area.setObjectName("scroll-area")
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setMinimumHeight(300)
-        
-        # Scroll content widget
-        scroll_content = QWidget()
-        scroll_layout = QVBoxLayout(scroll_content)
-        scroll_layout.setSpacing(5)
-        scroll_layout.setContentsMargins(10, 10, 10, 10)
-        
-        # Column Headers
-        header_widget = QFrame()
-        header_widget.setObjectName("list-header")
-        header_widget.setFixedHeight(40)
-        
-        header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(15, 10, 15, 10)
-        header_layout.setSpacing(20)
-        
-        # Header labels with fixed widths for column alignment
-        name_header = QLabel("Name")
-        name_header.setObjectName("header-label")
-        name_header.setFixedWidth(150)
-        name_header.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        
-        category_header = QLabel("Category")
-        category_header.setObjectName("header-label")
-        category_header.setFixedWidth(100)
-        category_header.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        
-        email_header = QLabel("Email")
-        email_header.setObjectName("header-label")
-        email_header.setFixedWidth(200)
-        email_header.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        
-        header_layout.addWidget(name_header)
-        header_layout.addWidget(category_header)
-        header_layout.addWidget(email_header)
-        header_layout.addStretch()
-        
-        scroll_layout.addWidget(header_widget)
-        
-        # Sample list items (Name, Category, Email)
-        sample_items = [
-            ("John Doe", "Developer", "john@example.com"),
-            ("Jane Smith", "Designer", "jane@example.com"),
-            ("Mike Johnson", "Manager", "mike@example.com"),
-            ("Sarah Wilson", "Developer", "sarah@example.com"),
-            ("Tom Brown", "Designer", "tom@example.com"),
-            ("Lisa Davis", "Manager", "lisa@example.com"),
-            ("David Miller", "Developer", "david@example.com"),
-            ("Emma Taylor", "Designer", "emma@example.com"),
-            ("Chris Anderson", "Manager", "chris@example.com"),
-            ("Anna White", "Developer", "anna@example.com")
-        ]
-        
-        for name, category, email in sample_items:
-            item_widget = QFrame()
-            item_widget.setObjectName("list-item")
-            item_widget.setFixedHeight(45)
-            
-            item_layout = QHBoxLayout(item_widget)
-            item_layout.setContentsMargins(15, 10, 15, 10)
-            item_layout.setSpacing(20)
-            
-            # Name column
-            name_label = QLabel(name)
-            name_label.setObjectName("item-name")
-            name_label.setFixedWidth(150)
-            name_label.setFont(QFont("Segoe UI", 11))
-            
-            # Category column
-            category_label = QLabel(category)
-            category_label.setObjectName("item-category")
-            category_label.setFixedWidth(100)
-            category_label.setFont(QFont("Segoe UI", 10))
-            
-            # Email column
-            email_label = QLabel(email)
-            email_label.setObjectName("item-email")
-            email_label.setFixedWidth(200)
-            email_label.setFont(QFont("Segoe UI", 10))
-            
-            item_layout.addWidget(name_label)
-            item_layout.addWidget(category_label)
-            item_layout.addWidget(email_label)
-            item_layout.addStretch()
-            
-            scroll_layout.addWidget(item_widget)
-        
-        scroll_layout.addStretch()
-        scroll_area.setWidget(scroll_content)
-        
-        # Create Profile button
-        create_profile_btn = QPushButton("Create Profile")
-        create_profile_btn.setObjectName("action-button")
-        create_profile_btn.setFixedSize(150, 40)
-        create_profile_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        
-        # Add all sections to body layout
-        body_layout.addLayout(search_filter_layout)
-        body_layout.addWidget(scroll_area)
-        body_layout.addWidget(create_profile_btn, alignment=Qt.AlignmentFlag.AlignCenter)
-        
-        self.main_layout.addWidget(self.body)
-        
-    def create_footer(self):
-        """Create the footer area with status and info"""
-        self.footer = QFrame()
-        self.footer.setObjectName("footer")
-        self.footer.setFixedHeight(35)
-        self.footer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        
-        footer_layout = QHBoxLayout(self.footer)
-        footer_layout.setContentsMargins(20, 10, 20, 10)
-        
-        # Status label
-        status_label = QLabel("Ready")
-        status_label.setObjectName("status-label")
-        status_label.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
-        
-        # Copyright info
-        copyright_label = QLabel("© 2024 Lucky Chrome")
-        copyright_label.setObjectName("copyright-label")
-        copyright_label.setFont(QFont("Segoe UI", 9))
-        
-        # Version info
-        version_label = QLabel("v1.0.0")
-        version_label.setObjectName("version-label")
-        version_label.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
-        
-        footer_layout.addWidget(status_label)
-        footer_layout.addStretch()
-        footer_layout.addWidget(copyright_label)
-        footer_layout.addWidget(version_label)
-        
-        self.main_layout.addWidget(self.footer)
-        
-    def apply_styles(self):
-        """Apply modern styling to the application"""
-        style_sheet = """
-        QMainWindow {
-            background-color: #ffffff;
-        }
-        
-        #header {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        #app-title {
-            color: #4a90e2;
-        }
-        
-        #nav-button {
-            background-color: transparent;
-            border: 1px solid #ffffff;
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        
-        #nav-button:hover {
-            background-color: #ffffff;
-            color: #4a90e2;
-        }
-        
-        #nav-button:pressed {
-            background-color: #f0f8ff;
-            color: #4a90e2;
-        }
-        
-        #body {
-            background-color: #ffffff;
-            border: none;
-        }
-        
-        #welcome-title {
-            color: #4a90e2;
-        }
-        
-        #description {
-            color: #5a6c7d;
-            font-size: 14px;
-        }
-        
-        #content-title {
-            color: #4a90e2;
-        }
-        
-        #text-area {
-            border: 2px solid #e1f0ff;
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 14px;
-            background-color: #f8fbff;
-        }
-        
-        #text-area:focus {
-            border-color: #4a90e2;
-            background-color: white;
-        }
-        
-        #action-button {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        #action-button:hover {
-            background-color: #357abd;
-        }
-        
-        #action-button:pressed {
-            background-color: #2d5aa0;
-        }
-        
-        #scroll-area {
-            border: 2px solid #e1f0ff;
-            border-radius: 6px;
-            background-color: #f8fbff;
-        }
-        
-        #list-item {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-        }
-        
-        #list-item:hover {
-            background-color: #f0f8ff;
-            border-color: #4a90e2;
-        }
-        
-        #item-name {
-            color: #2c3e50;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        #item-category {
-            color: #4a90e2;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 4px 8px;
-            background-color: #e1f0ff;
-            border-radius: 3px;
-        }
-        
-        #item-email {
-            color: #7f8c8d;
-            font-size: 12px;
-        }
-        
-        #list-header {
-            background-color: #4a90e2;
-            border: 1px solid #357abd;
-            border-radius: 4px;
-        }
-        
-        #header-label {
-            color: #ffffff;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        #footer {
-            background-color: #4a90e2;
-            border-top: 1px solid #357abd;
-        }
-        
-        #status-label {
-            color: #ffffff;
-            font-weight: bold;
-        }
-        
-        #copyright-label {
-            color: #ffffff;
-            font-size: 12px;
-        }
-        
-        #version-label {
-            color: #ffffff;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        """
-        
-        self.setStyleSheet(style_sheet)
+        self.settings = QSettings('SampleSuperCut', 'SampleSuperCutUI')
+        self.profiles = self.load_profiles()
+        self.init_ui()
 
+    def load_profiles(self):
+        """Load profiles from profile.json file"""
+        try:
+            with open('profile.json', 'r', encoding='utf-8') as file:
+                data = json.load(file)
+                return data.get('profiles', [])
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading profiles: {e}")
+            return []
+
+    def init_ui(self):
+        """Initialize the user interface"""
+        # Set window properties
+        self.setWindowTitle(WINDOW_TITLE)
+        self.setMinimumSize(400, 400)
+        self.resize(WINDOW_SIZE[0], WINDOW_SIZE[1])
+        self.setStyleSheet(STYLE_SHEET)
+        
+        # Create main layout
+        layout = QVBoxLayout()
+        layout.setContentsMargins(14, 18, 0, 2)
+        layout.setSpacing(0)
+
+        # --- TITLE AREA ---
+        self.create_title_area(layout)
+        
+        # --- SCROLLABLE CONTENT AREA ---
+        self.create_scrollable_content(layout)
+        
+        # --- BOTTOM ACTION AREA ---
+        self.create_bottom_action_area(layout)
+        
+        self.setLayout(layout)
+
+    def create_title_area(self, layout):
+        """Create the title area with icon and app name"""
+        title_widget = QtWidgets.QWidget()
+        title_widget.setFixedHeight(70)
+        title_widget.setStyleSheet("background-color: transparent;")
+        
+        # Title icon
+        title_icon = QLabel()
+        icon_path = os.path.join(PROJECT_ROOT, "src", "sources", "icon.png")
+        if os.path.exists(icon_path):
+            title_icon.setPixmap(QPixmap(icon_path).scaled(45, 45, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        else:
+            # Fallback icon if file doesn't exist
+            title_icon.setText("")
+            title_icon.setStyleSheet("font-size: 45px; background-color: transparent;")
+        
+        # Title label
+        title_label = QLabel("SuperCut")
+        title_label.setStyleSheet("font-size: 35px; font-weight: bold; background-color: transparent; color: #333333;")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        # Static icon (placeholder)
+        static_icon = QLabel("📹")
+        static_icon.setStyleSheet("font-size: 24px; background-color: transparent;")
+        static_icon.setVisible(True)
+        
+        # Title layout
+        title_layout = QtWidgets.QHBoxLayout()
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.setSpacing(0)
+        title_layout.addSpacing(35)
+        title_layout.addStretch()
+        title_layout.addWidget(title_icon)
+        title_layout.addSpacing(10)
+        title_layout.addWidget(title_label)
+        title_layout.addSpacing(10)
+        title_layout.addWidget(static_icon)
+        title_layout.addStretch()
+        title_widget.setLayout(title_layout)
+        
+        layout.addWidget(title_widget)
+        layout.addSpacing(0)
+
+
+
+    def create_scrollable_content(self, layout):
+        """Create the scrollable content area"""
+        # Create scroll area
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background: transparent;
+                margin-right: 0px;
+                padding-right: 0px;
+            }
+        """)
+        
+        # Create scrollable content widget
+        scroll_content = QtWidgets.QWidget()
+        scroll_content.setStyleSheet("background-color: transparent;")
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_layout.setContentsMargins(8, 0, 32, 0)
+        scroll_layout.setSpacing(10)
+        
+        # Add profiles section
+        self.create_profiles_section(scroll_layout)
+        
+        # Set the scroll content widget
+        scroll_area.setWidget(scroll_content)
+        layout.addWidget(scroll_area)
+        
+        # Store scroll area reference
+        self.scroll_area = scroll_area
+
+    def create_profiles_section(self, layout):
+        """Create the profiles display section"""
+        # Create table widget for profiles
+        self.profiles_table = QTableWidget()
+        self.profiles_table.setColumnCount(3)
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Type"])
+        
+        # Set table properties
+        self.profiles_table.setAlternatingRowColors(False)
+        self.profiles_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.profiles_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        
+        # Hide the row selection indicator column (first column)
+        self.profiles_table.verticalHeader().setVisible(False)
+        
+        # Set header properties
+        header = self.profiles_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # Number
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Name
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Type
+        
+        # Set table style
+        self.profiles_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #ffffff;
+                border: 2px solid #e0e0e0;
+                border-radius: 0px;
+                gridline-color: #f0f0f0;
+                outline: none;
+                selection-background-color: #4a90e2;
+                selection-color: white;
+            }
+            QTableWidget::item {
+                padding: 12px 8px;
+                border-bottom: 1px solid #f5f5f5;
+                background-color: transparent;
+                color: #333333;
+            }
+            QTableWidget::item:hover {
+                background-color: #f8f9fa;
+            }
+            QTableWidget::item:selected {
+                background-color: #4a90e2;
+                color: white;
+                border-bottom: 1px solid #4a90e2;
+            }
+            QTableWidget::item:selected:hover {
+                background-color: #357ABD;
+            }
+            QHeaderView::section {
+                background-color: #f8f9fa;
+                padding: 4px 8px;
+                border: none;
+                border-bottom: 2px solid #dee2e6;
+                border-right: 1px solid #e9ecef;
+                font-weight: bold;
+                color: #495057;
+                font-size: 13px;
+            }
+            QHeaderView::section:first {
+                border-top-left-radius: 6px;
+            }
+            QHeaderView::section:last {
+                border-top-right-radius: 6px;
+                border-right: none;
+            }
+            QTableCornerButton::section {
+                background-color: #f8f9fa;
+                border: none;
+                border-bottom: 2px solid #dee2e6;
+                border-right: 1px solid #e9ecef;
+            }
+            QTableWidget::item[column="0"] {
+                background-color: #f8f9fa;
+                color: #6c757d;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QTableWidget::item[column="0"]:selected {
+                background-color: #4a90e2;
+                color: white;
+            }
+        """)
+        
+        # Populate table with profile data
+        self.populate_profiles_table()
+        
+        # Add refresh button
+        refresh_btn = QPushButton("Refresh Profiles")
+        refresh_btn.setFixedSize(120, 30)
+        refresh_btn.clicked.connect(self.refresh_profiles)
+        refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #6c757d;
+                color: white;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+            QPushButton:hover {
+                background-color: #5a6268;
+            }
+        """)
+        
+        layout.addWidget(self.profiles_table)
+        layout.addWidget(refresh_btn)
+
+    def populate_profiles_table(self):
+        """Populate the profiles table with data from profile.json"""
+        self.profiles_table.setRowCount(len(self.profiles))
+        
+        for row, profile in enumerate(self.profiles):
+            # Number
+            number_item = QTableWidgetItem(str(row + 1))
+            number_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.profiles_table.setItem(row, 0, number_item)
+            
+            # Name
+            name_item = QTableWidgetItem(profile.get('name', ''))
+            self.profiles_table.setItem(row, 1, name_item)
+            
+            # Type
+            type_item = QTableWidgetItem(profile.get('type', ''))
+            type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.profiles_table.setItem(row, 2, type_item)
+
+    def refresh_profiles(self):
+        """Refresh the profiles table with updated data from profile.json"""
+        self.profiles = self.load_profiles()
+        self.populate_profiles_table()
+        print("Profiles refreshed successfully!")
+
+    def create_bottom_action_area(self, layout):
+        """Create the bottom action area with buttons"""
+        # Action buttons
+        action_layout = QHBoxLayout()
+        action_layout.setContentsMargins(14, 10, 14, 10)
+        action_layout.setSpacing(10)
+        
+        # Add spacing to push buttons to the left
+        action_layout.addStretch()
+        
+        layout.addLayout(action_layout)
 
 def main():
+    """Main function to run the sample application"""
     app = QApplication(sys.argv)
     
-    # Set application properties
-    app.setApplicationName("Modern PyQt6 App")
-    app.setApplicationVersion("1.0.0")
-    app.setOrganizationName("Modern Apps")
-    
     # Create and show the main window
-    window = ModernApp()
+    window = SampleSuperCutUI()
     window.show()
     
-    # Start the event loop
+    # Run the application
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
