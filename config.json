@@ -1,10 +1,19 @@
 {
   "channel_types": [
     "user_custom",
-    "user_custom",
-    "user_custom",
-    "user_custom",
-    "Chrome Profile"
+    "Chrome Profile",
+    "Standard",
+    "Premium",
+    "Basic"
+  ],
+  "sub_types": [
+    "Personal",
+    "Business",
+    "Gaming",
+    "Development",
+    "Testing",
+    "Marketing",
+    "Education"
   ],
   "app_settings": {
     "window_title": "Sample chrome UI",

@@ -593,6 +593,137 @@ class EditProfileDialog(QDialog):
         
         form_layout.addRow("Channel Types:", self.channel_types_container)
         
+        # Sub Types field (toggle buttons like channel types)
+        # Create a container for sub type buttons
+        self.sub_types_container = QFrame()
+        self.sub_types_container.setStyleSheet("""
+            QFrame {
+                background-color: #f8f9fa;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                padding: 12px;
+                min-height: 90px;
+            }
+        """)
+        
+        # Create layout for sub type buttons
+        self.sub_types_layout = QVBoxLayout(self.sub_types_container)
+        self.sub_types_layout.setSpacing(5)
+        self.sub_types_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Create grid layout for buttons (2 per row)
+        sub_buttons_layout = QGridLayout()
+        sub_buttons_layout.setSpacing(5)
+        
+        # Load sub types and create toggle buttons
+        sub_types = self.load_sub_types()
+        self.sub_type_buttons = {}
+        
+        for i, sub_type in enumerate(sub_types):
+            button = QPushButton(sub_type)
+            button.setCheckable(True)  # Make it a toggle button
+            button.setFixedSize(150, 30)
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: #ffffff;
+                    color: #333333;
+                    border: 1px solid #d0d0d0;
+                    border-radius: 4px;
+                    padding: 6px 12px;
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+                QPushButton:hover {
+                    background-color: #f0f8ff;
+                    border: 1px solid #4a90e2;
+                }
+                QPushButton:pressed {
+                    background-color: #e3f2fd;
+                }
+                QPushButton:checked {
+                    background-color: #4a90e2;
+                    color: white;
+                    border: 1px solid #4a90e2;
+                    font-weight: 600;
+                }
+                QPushButton:checked:hover {
+                    background-color: #357ABD;
+                }
+                QPushButton:checked:pressed {
+                    background-color: #2e6da4;
+                }
+            """)
+            
+            # Store button reference
+            self.sub_type_buttons[sub_type] = button
+            
+            # Add button to grid (2 per row)
+            row = i // 2
+            col = i % 2
+            sub_buttons_layout.addWidget(button, row, col)
+        
+        # Add utility buttons for sub types
+        sub_utility_layout = QHBoxLayout()
+        sub_utility_layout.setSpacing(5)
+        
+        # Select All button for sub types
+        sub_select_all_btn = QPushButton("All")
+        sub_select_all_btn.setFixedSize(60, 28)
+        sub_select_all_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 4px 4px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                border: 2px solid #47a4ff;
+            }
+        """)
+        sub_select_all_btn.clicked.connect(self.select_all_sub_types)
+        
+        # Clear All button for sub types
+        sub_clear_all_btn = QPushButton("Clear")
+        sub_clear_all_btn.setFixedSize(60, 28)
+        sub_clear_all_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 4px 4px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                border: 2px solid #ff6b6b;
+            }
+        """)
+        sub_clear_all_btn.clicked.connect(self.clear_all_sub_types)
+        
+        sub_utility_layout.addStretch()
+        sub_utility_layout.addWidget(sub_select_all_btn)
+        sub_utility_layout.addWidget(sub_clear_all_btn)
+        
+        # Add sub buttons layout to main layout
+        self.sub_types_layout.addLayout(sub_buttons_layout)
+        
+        # Add utility buttons to the main layout
+        self.sub_types_layout.addLayout(sub_utility_layout)
+               
+        # Set current selections for sub types
+        current_sub_types = self.profile_data.get('sub_types', [])
+        if isinstance(current_sub_types, str):
+            # Handle legacy single sub_type
+            current_sub_types = [current_sub_types] if current_sub_types else []
+        
+        for sub_type in current_sub_types:
+            if sub_type in self.sub_type_buttons:
+                self.sub_type_buttons[sub_type].setChecked(True)
+        
+        form_layout.addRow("Sub Types:", self.sub_types_container)
+        
         # Profile ID field (read-only for Chrome profiles)
         self.profile_id_edit = QLineEdit()
         self.profile_id_edit.setText(self.profile_data.get('profile_id', ''))
@@ -623,6 +754,36 @@ class EditProfileDialog(QDialog):
             }
         """)
         form_layout.addRow("Email:", self.email_edit)
+        
+        # Total Channel field
+        self.total_channel_edit = QLineEdit()
+        self.total_channel_edit.setText(self.profile_data.get('total_channel', ''))
+        self.total_channel_edit.setPlaceholderText("Enter total number of channels")
+        self.total_channel_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Total Channel:", self.total_channel_edit)
+        
+        # Notes field
+        self.notes_edit = QLineEdit()
+        self.notes_edit.setText(self.profile_data.get('notes', ''))
+        self.notes_edit.setPlaceholderText("Enter notes about this profile")
+        self.notes_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Notes:", self.notes_edit)
         
         layout.addLayout(form_layout)
         
@@ -683,8 +844,11 @@ class EditProfileDialog(QDialog):
             'name': self.name_edit.text().strip(),
             'profile': self.profile_edit.text().strip(),
             'channel_types': self.get_selected_channel_types(),
+            'sub_types': self.get_selected_sub_types(),
             'profile_id': self.profile_id_edit.text().strip(),
-            'email': self.email_edit.text().strip()
+            'email': self.email_edit.text().strip(),
+            'total_channel': self.total_channel_edit.text().strip(),
+            'notes': self.notes_edit.text().strip()
         }
         
     def load_channel_types(self):
@@ -719,6 +883,38 @@ class EditProfileDialog(QDialog):
         if 'user_custom' in self.channel_type_buttons:
             self.channel_type_buttons['user_custom'].setChecked(True)
     
+    def load_sub_types(self):
+        """Load sub types from config.json file"""
+        try:
+            with open('config.json', 'r', encoding='utf-8') as file:
+                config = json.load(file)
+                return config.get('sub_types', ['Personal'])
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading config.json: {e}")
+            # Return default sub types if config file is not found or invalid
+            return ['Personal', 'Business', 'Gaming', 'Development', 'Testing', 'Marketing', 'Education']
+    
+    def get_selected_sub_types(self):
+        """Get the selected sub types from the toggle buttons"""
+        selected_types = []
+        for sub_type, button in self.sub_type_buttons.items():
+            if button.isChecked():
+                selected_types.append(sub_type)
+        return selected_types if selected_types else ['Personal']
+    
+    def select_all_sub_types(self):
+        """Select all sub types"""
+        for button in self.sub_type_buttons.values():
+            button.setChecked(True)
+    
+    def clear_all_sub_types(self):
+        """Clear all sub types and set default to Personal"""
+        for button in self.sub_type_buttons.values():
+            button.setChecked(False)
+        # Ensure at least one is selected (Personal)
+        if 'Personal' in self.sub_type_buttons:
+            self.sub_type_buttons['Personal'].setChecked(True)
+    
 
 
 class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
@@ -746,12 +942,12 @@ class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
             if text:
                 # Draw the text with proper alignment
                 alignment = Qt.AlignmentFlag.AlignVCenter
-                if index.column() in [0, 4]:  # Number, Profile ID columns
+                if index.column() in [0, 4, 5, 6]:  # Number, Sub Type, Total Channel, Profile ID columns
                     alignment |= Qt.AlignmentFlag.AlignCenter
                     painter.drawText(option.rect, alignment, str(text))
                 else:
                     alignment |= Qt.AlignmentFlag.AlignLeft
-                    # Add left margin for Name, Profile, Channel Types, and Email columns
+                    # Add left margin for Name, Profile, Channel Types, Email, and Notes columns
                     rect = option.rect
                     rect.setLeft(rect.left() + 12)  # Add 12px left margin
                     painter.drawText(rect, alignment, str(text))
@@ -795,11 +991,23 @@ class SamplechromeUI(QWidget):
                 data = json.load(file)
                 profiles = data.get('profiles', [])
                 
-                # Migrate existing profiles to include email field and channel_types if not present
+                # Migrate existing profiles to include email field, notes field, total_channel field, sub_types field, and channel_types if not present
                 migrated = False
                 for profile in profiles:
                     if 'email' not in profile:
                         profile['email'] = ''
+                        migrated = True
+                    
+                    if 'notes' not in profile:
+                        profile['notes'] = ''
+                        migrated = True
+                    
+                    if 'total_channel' not in profile:
+                        profile['total_channel'] = ''
+                        migrated = True
+                    
+                    if 'sub_types' not in profile:
+                        profile['sub_types'] = ['Personal']
                         migrated = True
                     
                     # Migrate channel_type to channel_types
@@ -852,8 +1060,11 @@ class SamplechromeUI(QWidget):
                             'name': '',
                             'profile': profile_name,
                             'channel_types': ['user_custom'],
+                            'sub_types': ['Personal'],
                             'profile_id': profile_id,
-                            'email': email
+                            'email': email,
+                            'total_channel': '',
+                            'notes': ''
                         })
             except (json.JSONDecodeError, KeyError) as e:
                 print(f"Error reading Chrome profiles: {e}")
@@ -1161,8 +1372,8 @@ class SamplechromeUI(QWidget):
         """Create the profiles display section"""
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
-        self.profiles_table.setColumnCount(6)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Types", "Profile ID", "Sign in"])
+        self.profiles_table.setColumnCount(9)
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Types", "Sub Type", "Total Channel", "Profile ID", "Sign in", "Notes"])
         
         # Set custom delegate for styling deleted profiles
         self.table_delegate = DeletedProfileDelegate(self.profiles_table)
@@ -1193,8 +1404,11 @@ class SamplechromeUI(QWidget):
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Name
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # Profile
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Channel Type
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)  # Email
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Sub Type
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Total Channel
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)  # Email
+        header.setSectionResizeMode(8, QHeaderView.ResizeMode.Stretch)  # Notes
         
         # Set table style
         self.profiles_table.setStyleSheet("""
@@ -1412,16 +1626,38 @@ class SamplechromeUI(QWidget):
             channel_type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.profiles_table.setItem(row, 3, channel_type_item)
             
+            # Sub Type
+            sub_types = profile.get('sub_types', [])
+            if isinstance(sub_types, str):
+                # Handle legacy single sub_type
+                sub_types = [sub_types] if sub_types else []
+            
+            sub_types_text = ', '.join(sub_types) if sub_types else ''
+            sub_type_item = QTableWidgetItem(sub_types_text)
+            sub_type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.profiles_table.setItem(row, 4, sub_type_item)
+            
+            # Total Channel
+            total_channel = profile.get('total_channel', '')
+            total_channel_item = QTableWidgetItem(total_channel)
+            total_channel_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.profiles_table.setItem(row, 5, total_channel_item)
+            
             # Profile ID
             profile_id = profile.get('profile_id', '')
             profile_id_item = QTableWidgetItem(profile_id)
             profile_id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 4, profile_id_item)
+            self.profiles_table.setItem(row, 6, profile_id_item)
             
             # Email
             email = profile.get('email', '')
             email_item = QTableWidgetItem(email)
-            self.profiles_table.setItem(row, 5, email_item)
+            self.profiles_table.setItem(row, 7, email_item)
+            
+            # Notes
+            notes = profile.get('notes', '')
+            notes_item = QTableWidgetItem(notes)
+            self.profiles_table.setItem(row, 8, notes_item)
             
             # Track deleted profiles for custom delegate
             if not profile_exists:
