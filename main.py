@@ -252,11 +252,11 @@ class EditProfileDialog(QDialog):
         """)
         form_layout.addRow("Profile:", self.profile_edit)
         
-        # Type field
-        self.type_combo = QComboBox()
-        self.type_combo.addItems(["user_custom", "Chrome Profile", "Standard", "Premium", "Basic"])
-        self.type_combo.setCurrentText(self.profile_data.get('type', 'user_custom'))
-        self.type_combo.setStyleSheet("""
+        # Channel Type field
+        self.channel_type_combo = QComboBox()
+        self.channel_type_combo.addItems(["user_custom", "Chrome Profile", "Standard", "Premium", "Basic"])
+        self.channel_type_combo.setCurrentText(self.profile_data.get('channel_type', 'user_custom'))
+        self.channel_type_combo.setStyleSheet("""
             QComboBox {
                 padding: 8px 8px;
                 border: 1px solid #e0e0e0;
@@ -265,7 +265,7 @@ class EditProfileDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Type:", self.type_combo)
+        form_layout.addRow("Channel Type:", self.channel_type_combo)
         
         # Profile ID field (read-only for Chrome profiles)
         self.profile_id_edit = QLineEdit()
@@ -336,7 +336,7 @@ class EditProfileDialog(QDialog):
         return {
             'name': self.name_edit.text().strip(),
             'profile': self.profile_edit.text().strip(),
-            'type': self.type_combo.currentText(),
+            'channel_type': self.channel_type_combo.currentText(),
             'profile_id': self.profile_id_edit.text().strip()
         }
 
@@ -529,7 +529,7 @@ class SamplechromeUI(QWidget):
                         chrome_profiles.append({
                             'name': '',
                             'profile': profile_name,
-                            'type': 'user_custom',
+                            'channel_type': 'user_custom',
                             'profile_id': profile_id
                         })
             except (json.JSONDecodeError, KeyError) as e:
@@ -659,7 +659,7 @@ class SamplechromeUI(QWidget):
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
         self.profiles_table.setColumnCount(5)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Type", "Profile ID"])
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Type", "Profile ID"])
         
         # Set table properties
         self.profiles_table.setAlternatingRowColors(False)
@@ -685,7 +685,7 @@ class SamplechromeUI(QWidget):
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # Number
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Name
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # Profile
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Type
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Channel Type
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
         
         # Set table style
@@ -870,10 +870,10 @@ class SamplechromeUI(QWidget):
             profile_item = QTableWidgetItem(profile_name)
             self.profiles_table.setItem(row, 2, profile_item)
             
-            # Type
-            type_item = QTableWidgetItem(profile.get('type', ''))
-            type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 3, type_item)
+            # Channel Type
+            channel_type_item = QTableWidgetItem(profile.get('channel_type', ''))
+            channel_type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.profiles_table.setItem(row, 3, channel_type_item)
             
             # Profile ID
             profile_id = profile.get('profile_id', '')
