@@ -154,6 +154,28 @@ QScrollBar::handle:vertical:hover {
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
 }
+
+QScrollBar:horizontal {
+    background: rgba(240, 240, 240, 0.20);
+    height: 12px;
+    border-radius: 6px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    background: rgba(192, 192, 192, 0.20);
+    border-radius: 6px;
+    min-width: 20px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: rgba(160, 160, 160, 0.35);
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
 """
 
 class CustomMessageBox(QDialog):
