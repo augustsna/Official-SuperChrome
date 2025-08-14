@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView, QDialog
 )
 from PyQt6.QtCore import Qt, QSettings, QSize, QTimer
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon, QPixmap, QColor
 
 # Sample configuration constants
 WINDOW_SIZE = (600, 500)
@@ -537,6 +537,62 @@ class SamplechromeUI(QWidget):
         
         return chrome_profiles
 
+    def validate_profile_exists(self, profile_id):
+        """Check if a Chrome profile actually exists on disk"""
+        if not profile_id:
+            return False
+            
+        system = platform.system()
+        if system == "Windows":
+            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+        elif system == "Darwin":  # macOS
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+        else:  # Linux
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+        
+        # Check if the profile directory exists
+        profile_dir = os.path.join(chrome_data_dir, profile_id)
+        return os.path.exists(profile_dir)
+
+    def cleanup_deleted_profiles(self):
+        """Remove profiles that no longer exist in Chrome"""
+        valid_profiles = []
+        deleted_profiles = []
+        
+        for profile in self.profiles:
+            if self.validate_profile_exists(profile.get('profile_id', '')):
+                valid_profiles.append(profile)
+            else:
+                deleted_profiles.append(profile)
+        
+        if deleted_profiles:
+            # Update the profiles list
+            self.profiles = valid_profiles
+            self.save_profiles(self.profiles)
+            self.populate_profiles_table()
+            
+            # Show notification
+            profile_names = [p.get('profile', '') for p in deleted_profiles]
+            CustomMessageBox.show_info(self, "Profiles Cleaned", 
+                                     f"Removed {len(deleted_profiles)} deleted profiles: {', '.join(profile_names)}")
+        else:
+            CustomMessageBox.show_info(self, "No Cleanup Needed", 
+                                     "All profiles are valid and exist.")
+
+    def check_deleted_profiles_on_startup(self):
+        """Silently check for deleted profiles on startup and show a warning if found"""
+        deleted_profiles = []
+        
+        for profile in self.profiles:
+            if not self.validate_profile_exists(profile.get('profile_id', '')):
+                deleted_profiles.append(profile)
+        
+        if deleted_profiles:
+            profile_names = [p.get('profile', '') for p in deleted_profiles]
+            CustomMessageBox.show_warning(self, "Deleted Profiles Found", 
+                                        f"Found {len(deleted_profiles)} deleted Chrome profiles:\n{', '.join(profile_names)}\n\n"
+                                        "These profiles highlighted in red. Use 'Clean' to remove them.")
+
     def save_profiles(self, profiles):
         """Save profiles to profile.json file"""
         try:
@@ -571,6 +627,9 @@ class SamplechromeUI(QWidget):
         self.create_scrollable_content(layout)
         
         self.setLayout(layout)
+        
+        # Check for deleted profiles on startup (silent check)
+        self.check_deleted_profiles_on_startup()
 
     def create_title_area(self, layout):
         """Create the title area with icon and app name"""
@@ -840,9 +899,28 @@ class SamplechromeUI(QWidget):
             }
         """)
         
+        # Add cleanup button
+        cleanup_btn = QPushButton("Clean")
+        cleanup_btn.setFixedSize(80, 30)
+        cleanup_btn.clicked.connect(self.cleanup_deleted_profiles)
+        cleanup_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                border: 2px solid #ff6b6b;
+            }
+        """)
+        
         buttons_layout.addWidget(chrome_btn)
         buttons_layout.addWidget(refresh_btn)
         buttons_layout.addWidget(edit_btn)
+        buttons_layout.addWidget(cleanup_btn)
         buttons_layout.addStretch()
         buttons_layout.addWidget(launch_btn)
   
@@ -856,6 +934,9 @@ class SamplechromeUI(QWidget):
         self.profiles_table.setRowCount(len(self.profiles))
         
         for row, profile in enumerate(self.profiles):
+            # Check if profile exists
+            profile_exists = self.validate_profile_exists(profile.get('profile_id', ''))
+            
             # Number
             number_item = QTableWidgetItem(str(row + 1))
             number_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -880,6 +961,14 @@ class SamplechromeUI(QWidget):
             profile_id_item = QTableWidgetItem(profile_id)
             profile_id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.profiles_table.setItem(row, 4, profile_id_item)
+            
+            # Apply visual styling for deleted profiles
+            if not profile_exists:
+                for col in range(5):
+                    item = self.profiles_table.item(row, col)
+                    if item:
+                        item.setBackground(QColor(255, 235, 235))  # Light red background
+                        item.setForeground(QColor(150, 150, 150))  # Gray text
 
     def refresh_profiles(self):
         """Refresh the profiles table with updated data from profile.json"""
@@ -892,7 +981,7 @@ class SamplechromeUI(QWidget):
         # Set up auto-close timer
         timer = QTimer(dialog)
         timer.timeout.connect(dialog.accept)
-        timer.start(1500)  # Auto-close after 1 second
+        timer.start(1200)  # Auto-close after 1 second
         
         dialog.exec()
 
@@ -984,6 +1073,14 @@ class SamplechromeUI(QWidget):
         if not profile_id:
             CustomMessageBox.show_warning(self, "No Profile ID", 
                                         "Selected profile does not have a valid profile ID.")
+            return
+        
+        # Validate profile exists before launching
+        if not self.validate_profile_exists(profile_id):
+            CustomMessageBox.show_error(self, "Profile Not Found", 
+                                      f"Profile '{profile_name}' no longer exists.\n"
+                                      "It may have been deleted from Chrome.\n\n"
+                                      "Use the 'Cleanup' button to remove deleted profiles.")
             return
         
         try:
