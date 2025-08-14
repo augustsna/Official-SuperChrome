@@ -99,16 +99,16 @@ class CustomMessageBox(QDialog):
         layout.addWidget(message_label)
 
         # Buttons row
-        btn_row = QHBoxLayout()
-        btn_row.addStretch()
+        self.btn_row = QHBoxLayout()
+        self.btn_row.addStretch()
         # OK button
-        ok_btn = QPushButton("OK")
-        ok_btn.setFixedWidth(100)  # Set specific width and height
-        ok_btn.setDefault(True)
-        ok_btn.clicked.connect(self.accept)
-        btn_row.addWidget(ok_btn)
-        btn_row.addStretch()
-        layout.addLayout(btn_row)
+        self.ok_button = QPushButton("OK")
+        self.ok_button.setFixedWidth(100)  # Set specific width and height
+        self.ok_button.setDefault(True)
+        self.ok_button.clicked.connect(self.accept)
+        self.btn_row.addWidget(self.ok_button)
+        self.btn_row.addStretch()
+        layout.addLayout(self.btn_row)
 
         # Shortcut
         from PyQt6.QtGui import QShortcut, QKeySequence
@@ -188,6 +188,51 @@ class CustomMessageBox(QDialog):
         """Show error message box"""
         dialog = CustomMessageBox(parent, title, message, "error")
         dialog.exec()
+        
+    @staticmethod
+    def show_confirmation(parent, title, message):
+        """Show confirmation dialog with Yes/No buttons"""
+        dialog = CustomMessageBox(parent, title, message, "warning")
+        
+        # Replace the OK button with Yes/No buttons
+        dialog.ok_button.setText("Yes")
+        dialog.ok_button.setStyleSheet("""
+            QPushButton {
+                background-color: #dc3545;
+                color: white;
+                font-size: 13px;
+                padding: 7px 18px;
+                border-radius: 6px;
+                margin-top: 8px;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+        """)
+        
+        # Add No button
+        dialog.no_button = QPushButton("No")
+        dialog.no_button.setStyleSheet("""
+            QPushButton {
+                background-color: #6c757d;
+                color: white;
+                font-size: 13px;
+                padding: 7px 18px;
+                border-radius: 6px;
+                margin-top: 8px;
+            }
+            QPushButton:hover {
+                background-color: #5a6268;
+            }
+        """)
+        dialog.no_button.clicked.connect(dialog.reject)
+        
+        # Update the button layout
+        dialog.btn_row.addWidget(dialog.no_button)
+        dialog.btn_row.addWidget(dialog.ok_button)
+        
+        result = dialog.exec()
+        return result == QDialog.DialogCode.Accepted
 
 
 class EditProfileDialog(QDialog):
@@ -285,46 +330,48 @@ class EditProfileDialog(QDialog):
         
         layout.addLayout(form_layout)
         
-        # Buttons
-        button_layout = QHBoxLayout()
-        button_layout.addStretch()
+        
         
         # Cancel button
         cancel_btn = QPushButton("Cancel")
-        cancel_btn.setFixedSize(100, 35)
+        cancel_btn.setFixedSize(100, 30)
         cancel_btn.clicked.connect(self.reject)
         cancel_btn.setStyleSheet("""
             QPushButton {
-                background-color: #6c757d;
+                background-color: #4a90e2;
                 color: white;
-                border-radius: 6px;
-                font-size: 14px;
-                font-weight: bold;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: normal;
             }
             QPushButton:hover {
-                background-color: #5a6268;
+                background-color: #357ABD;
             }
         """)
         
         # Save button
         save_btn = QPushButton("Save")
-        save_btn.setFixedSize(100, 35)
+        save_btn.setFixedSize(100, 30)
         save_btn.clicked.connect(self.accept)
         save_btn.setStyleSheet("""
             QPushButton {
                 background-color: #28a745;
                 color: white;
-                border-radius: 6px;
-                font-size: 14px;
-                font-weight: bold;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: normal;
             }
             QPushButton:hover {
                 background-color: #218838;
             }
         """)
         
+        # Buttons
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
+        button_layout.addStretch()
         layout.addLayout(button_layout)
         
         # Add keyboard shortcuts
@@ -479,6 +526,45 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 }
 """
 
+class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
+    """Custom delegate to handle styling of deleted profiles"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.deleted_rows = set()
+    
+    def set_deleted_rows(self, deleted_rows):
+        """Set which rows contain deleted profiles"""
+        self.deleted_rows = deleted_rows
+    
+    def paint(self, painter, option, index):
+        """Custom paint method to style deleted profiles"""
+        if index.row() in self.deleted_rows:
+            # Fill background with light red color
+            painter.fillRect(option.rect, QColor(255, 235, 235))
+            
+            # Set text color to gray
+            painter.setPen(QColor(150, 150, 150))
+            
+            # Get the text from the item
+            text = index.data()
+            if text:
+                # Draw the text with proper alignment
+                alignment = Qt.AlignmentFlag.AlignVCenter
+                if index.column() in [0, 3, 4]:  # Number, Channel Type, Profile ID columns
+                    alignment |= Qt.AlignmentFlag.AlignCenter
+                    painter.drawText(option.rect, alignment, str(text))
+                else:
+                    alignment |= Qt.AlignmentFlag.AlignLeft
+                    # Add left margin for Name and Profile columns
+                    rect = option.rect
+                    rect.setLeft(rect.left() + 12)  # Add 12px left margin
+                    painter.drawText(rect, alignment, str(text))
+        else:
+            # Use default painting for non-deleted profiles
+            super().paint(painter, option, index)
+
+
 class SamplechromeUI(QWidget):
     """Sample main application window demonstrating chrome UI structure"""
     
@@ -566,21 +652,31 @@ class SamplechromeUI(QWidget):
                 deleted_profiles.append(profile)
         
         if deleted_profiles:
-            # Update the profiles list
-            self.profiles = valid_profiles
-            self.save_profiles(self.profiles)
-            self.populate_profiles_table()
-            
-            # Show notification
+            # Show confirmation dialog with list of profiles to be deleted
             profile_names = [p.get('profile', '') for p in deleted_profiles]
-            CustomMessageBox.show_info(self, "Profiles Cleaned", 
-                                     f"Removed {len(deleted_profiles)} deleted profiles: {', '.join(profile_names)}")
+            confirmation_message = f"Are you sure you want to remove {len(deleted_profiles)} deleted Chrome profiles?\n\n"
+            confirmation_message += f"The following profiles will be removed from the list:\n"
+            confirmation_message += f"• {', '.join(profile_names)}\n\n"
+            confirmation_message += "This action cannot be undone."
+            
+            # Create custom confirmation dialog
+            reply = CustomMessageBox.show_confirmation(self, "Confirm Cleanup", confirmation_message)
+            
+            if reply:
+                # User confirmed, proceed with cleanup
+                self.profiles = valid_profiles
+                self.save_profiles(self.profiles)
+                self.populate_profiles_table()
+                
+                # Show success notification
+                CustomMessageBox.show_success(self, "Profiles Cleaned", 
+                                           f"Successfully removed {len(deleted_profiles)} deleted profiles:\n{', '.join(profile_names)}")
         else:
             CustomMessageBox.show_info(self, "No Cleanup Needed", 
                                      "All profiles are valid and exist.")
 
     def check_deleted_profiles_on_startup(self):
-        """Silently check for deleted profiles on startup and show a warning if found"""
+        """Check for deleted profiles on startup and show a warning if found"""
         deleted_profiles = []
         
         for profile in self.profiles:
@@ -590,8 +686,10 @@ class SamplechromeUI(QWidget):
         if deleted_profiles:
             profile_names = [p.get('profile', '') for p in deleted_profiles]
             CustomMessageBox.show_warning(self, "Deleted Profiles Found", 
-                                        f"Found {len(deleted_profiles)} deleted Chrome profiles:\n{', '.join(profile_names)}\n\n"
-                                        "These profiles highlighted in red. Use 'Clean' to remove them.")
+                                        f"Found {len(deleted_profiles)} deleted Chrome profiles:\n\n"
+                                        f"• {', '.join(profile_names)}\n\n"
+                                        "These profiles are highlighted in red.\n"
+                                        "Use the 'Cleanup' button to remove them from the list.")
 
     def save_profiles(self, profiles):
         """Save profiles to profile.json file"""
@@ -628,8 +726,8 @@ class SamplechromeUI(QWidget):
         
         self.setLayout(layout)
         
-        # Check for deleted profiles on startup (silent check)
-        self.check_deleted_profiles_on_startup()
+        # Check for deleted profiles on startup after window is shown
+        QTimer.singleShot(500, self.check_deleted_profiles_on_startup)
 
     def create_title_area(self, layout):
         """Create the title area with icon and app name"""
@@ -720,6 +818,10 @@ class SamplechromeUI(QWidget):
         self.profiles_table.setColumnCount(5)
         self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Type", "Profile ID"])
         
+        # Set custom delegate for styling deleted profiles
+        self.table_delegate = DeletedProfileDelegate(self.profiles_table)
+        self.profiles_table.setItemDelegate(self.table_delegate)
+        
         # Set table properties
         self.profiles_table.setAlternatingRowColors(False)
         self.profiles_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -762,7 +864,6 @@ class SamplechromeUI(QWidget):
             QTableWidget::item {
                 padding: 12px 8px;
                 border-bottom: 1px solid #f5f5f5;
-                background-color: transparent;
                 color: #333333;
             }
             QTableWidget::item:hover {
@@ -933,6 +1034,8 @@ class SamplechromeUI(QWidget):
         """Populate the profiles table with data from profile.json"""
         self.profiles_table.setRowCount(len(self.profiles))
         
+        deleted_rows = set()
+        
         for row, profile in enumerate(self.profiles):
             # Check if profile exists
             profile_exists = self.validate_profile_exists(profile.get('profile_id', ''))
@@ -962,13 +1065,16 @@ class SamplechromeUI(QWidget):
             profile_id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.profiles_table.setItem(row, 4, profile_id_item)
             
-            # Apply visual styling for deleted profiles
+            # Track deleted profiles for custom delegate
             if not profile_exists:
-                for col in range(5):
-                    item = self.profiles_table.item(row, col)
-                    if item:
-                        item.setBackground(QColor(255, 235, 235))  # Light red background
-                        item.setForeground(QColor(150, 150, 150))  # Gray text
+                deleted_rows.add(row)
+        
+        # Update the custom delegate with deleted rows
+        if hasattr(self, 'table_delegate'):
+            self.table_delegate.set_deleted_rows(deleted_rows)
+        
+        # Force the table to update its styling
+        self.profiles_table.viewport().update()
 
     def refresh_profiles(self):
         """Refresh the profiles table with updated data from profile.json"""
