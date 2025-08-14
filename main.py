@@ -398,7 +398,7 @@ class EditProfileDialog(QDialog):
         channel_types = self.load_channel_types()
         rows_needed = (len(channel_types) + 1) // 2  # 2 buttons per row
         extra_height = max(0, (rows_needed - 2)) * 40  # 40px per extra row, assuming 2 rows fit in base height
-        dynamic_height = 400 + extra_height
+        dynamic_height = 410 + extra_height
         
         self.setFixedSize(470, dynamic_height)
         self.setModal(True)
@@ -535,16 +535,15 @@ class EditProfileDialog(QDialog):
         select_all_btn.setFixedSize(60, 28)
         select_all_btn.setStyleSheet("""
             QPushButton {
-                background-color: #28a745;
-                color: white;
-                border: none;
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
                 border-radius: 6px;
-                padding: 5px 10px;
-                font-size: 12px;
-                font-weight: normal;
+                padding: 4px 4px;
+                font-weight: 500;
             }
             QPushButton:hover {
-                background-color: #218838;
+                border: 2px solid #47a4ff;
             }
         """)
         select_all_btn.clicked.connect(self.select_all_channel_types)
@@ -554,16 +553,15 @@ class EditProfileDialog(QDialog):
         clear_all_btn.setFixedSize(60, 28)
         clear_all_btn.setStyleSheet("""
             QPushButton {
-                background-color: #dc3545;
-                color: white;
-                border: none;
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
                 border-radius: 6px;
-                padding: 5px 10px;
-                font-size: 12px;
-                font-weight: normal;
+                padding: 4px 4px;
+                font-weight: 500;
             }
             QPushButton:hover {
-                background-color: #c82333;
+                border: 2px solid #ff6b6b;
             }
         """)
         clear_all_btn.clicked.connect(self.clear_all_channel_types)
@@ -628,8 +626,6 @@ class EditProfileDialog(QDialog):
         
         layout.addLayout(form_layout)
         
-        
-        
         # Cancel button
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setFixedSize(100, 30)
@@ -665,6 +661,8 @@ class EditProfileDialog(QDialog):
         """)
         
         # Buttons
+        layout.addSpacing(10)
+
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(0)
