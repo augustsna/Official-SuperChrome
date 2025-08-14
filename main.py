@@ -14,7 +14,7 @@ from PyQt6.QtGui import QIcon, QPixmap, QColor
 # Sample configuration constants
 WINDOW_SIZE = (600, 500)
 WINDOW_TITLE = "Sample chrome UI"
-ICON_PATH = "src/sources/icon.png"
+ICON_PATH = "src/icon.png"
 PROJECT_ROOT = "."
 
 # Sample stylesheet with correct colors matching chrome
@@ -784,7 +784,7 @@ class SamplechromeUI(QWidget):
                 'app_settings': {
                     'window_title': 'Sample chrome UI',
                     'window_size': [600, 500],
-                    'icon_path': 'src/sources/icon.png'
+                    'icon_path': 'src/icon.png'
                 }
             }
 
@@ -1050,6 +1050,11 @@ class SamplechromeUI(QWidget):
         self.resize(window_size[0], window_size[1])
         self.setStyleSheet(STYLE_SHEET)
         
+        # Set window icon
+        icon_path = os.path.join(PROJECT_ROOT, ICON_PATH)
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+        
         # Add keyboard shortcuts
         from PyQt6.QtGui import QShortcut, QKeySequence
         QShortcut(QKeySequence("Ctrl+W"), self, self.close)
@@ -1078,7 +1083,7 @@ class SamplechromeUI(QWidget):
         
         # Title icon
         title_icon = QLabel()
-        icon_path = os.path.join(PROJECT_ROOT, "src", "sources", "icon.png")
+        icon_path = os.path.join(PROJECT_ROOT, ICON_PATH)
         if os.path.exists(icon_path):
             title_icon.setPixmap(QPixmap(icon_path).scaled(45, 45, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         else:
