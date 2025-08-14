@@ -885,12 +885,13 @@ class SamplechromeUI(QWidget):
                                      "No Chrome profiles found. Make sure Chrome is installed and has been used at least once.")
             return
         
-        # Check for duplicates
-        existing_names = {profile.get('name', '') for profile in self.profiles}
+        # Check for duplicates (check both name and profile_id)
+        existing_profiles = {(profile.get('name', ''), profile.get('profile_id', '')) for profile in self.profiles}
         new_profiles = []
         
         for chrome_profile in chrome_profiles:
-            if chrome_profile['name'] not in existing_names:
+            profile_key = (chrome_profile['name'], chrome_profile['profile_id'])
+            if profile_key not in existing_profiles:
                 new_profiles.append(chrome_profile)
         
         if not new_profiles:
@@ -904,8 +905,14 @@ class SamplechromeUI(QWidget):
         # Save to file
         if self.save_profiles(self.profiles):
             self.populate_profiles_table()
-            CustomMessageBox.show_success(self, "Success", 
-                                        f"Added {len(new_profiles)} Chrome profile(s) to the list.")
+            # Show different messages based on number of profiles
+            if len(new_profiles) > 5:
+                CustomMessageBox.show_success(self, "Success", 
+                                            f"Added {len(new_profiles)} Chrome profile(s) to the list.")
+            else:
+                profile_names = [profile['profile'] for profile in new_profiles]
+                CustomMessageBox.show_success(self, "Success", 
+                                            f"Added profiles: {', '.join(profile_names)}")
         else:
             CustomMessageBox.show_error(self, "Error", 
                                       "Failed to save profiles to file.")
