@@ -6,7 +6,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QGroupBox, QFormLayout, QCheckBox, QComboBox,
-    QTableWidget, QTableWidgetItem, QHeaderView, QDialog
+    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QGridLayout
 )
 from PyQt6.QtCore import Qt, QSettings, QSize, QTimer
 from PyQt6.QtGui import QIcon, QPixmap, QColor
@@ -16,6 +16,145 @@ WINDOW_SIZE = (600, 500)
 WINDOW_TITLE = "Sample chrome UI"
 ICON_PATH = "src/sources/icon.png"
 PROJECT_ROOT = "."
+
+# Sample stylesheet with correct colors matching chrome
+STYLE_SHEET = """
+QWidget {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: #333333;
+    background-color: #f5f7fa;
+}
+
+QGroupBox {
+    font-weight: bold;
+    border: 2px solid #cccccc;
+    border-radius: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    background-color: white;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px 0 5px;
+    color: #333333;
+}
+
+QPushButton {
+    background-color: #4a90e2;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 12px;
+}
+
+QPushButton:hover {
+    background-color: #357ABD;
+}
+
+QLineEdit {
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #333;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+QLineEdit:hover {
+    border: 2px solid #4a90e2;
+    background-color: #ffffff;
+}
+
+QComboBox {
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #333;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+QComboBox:hover {
+    border: 2px solid #4687f4;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 0px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border: none;
+    width: 0px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #ffffff;
+    selection-background-color: #3f92e3;
+    border: 1px solid #ccc;
+    outline: none;
+}
+
+QCheckBox {
+    spacing: 8px;
+    font-size: 13px;
+    color: #333;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #ffffff;
+}
+
+QCheckBox::indicator:hover {
+    background: #f5f9ff;
+}
+
+QCheckBox::indicator:unchecked {
+    background: #ffffff;
+    border: 1px solid #ccc;
+}
+
+QCheckBox::indicator:unchecked:hover {
+    background: #f5f9ff;
+}
+
+QCheckBox::indicator:checked {
+    background: #ffffff;
+    border: 1px solid #ccc;
+    image: url(src/sources/black_tick.svg);
+}
+
+QScrollBar:vertical {
+    background: rgba(240, 240, 240, 0.20);
+    width: 12px;
+    border-radius: 6px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(192, 192, 192, 0.20);
+    border-radius: 6px;
+    min-height: 20px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: rgba(160, 160, 160, 0.35);
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+"""
 
 class CustomMessageBox(QDialog):
     """Custom message box dialog with consistent styling"""
@@ -195,41 +334,54 @@ class CustomMessageBox(QDialog):
         dialog = CustomMessageBox(parent, title, message, "warning")
         
         # Replace the OK button with Yes/No buttons
-        dialog.ok_button.setText("Yes")
-        dialog.ok_button.setStyleSheet("""
+        ok_button = dialog.ok_button
+        ok_button.setText("Yes")
+        ok_button.setFixedSize(100, 30)
+        ok_button.setStyleSheet("""
             QPushButton {
-                background-color: #dc3545;
-                color: white;
-                font-size: 13px;
-                padding: 7px 18px;
-                border-radius: 6px;
-                margin-top: 8px;
+                background-color: #28a745 !important;
+                color: white !important;
+                border-radius: 6px !important;
+                padding: 4px 8px !important;
+                font-size: normal !important;
+                margin-top: 0px !important;
             }
             QPushButton:hover {
-                background-color: #c82333;
+                background-color: #218838 !important;
             }
         """)
         
-        # Add No button
-        dialog.no_button = QPushButton("No")
-        dialog.no_button.setStyleSheet("""
+        # Add No button ##1
+        no_button = QPushButton("No")
+        no_button.setFixedSize(100, 30)
+        no_button.setStyleSheet("""
             QPushButton {
-                background-color: #6c757d;
-                color: white;
-                font-size: 13px;
-                padding: 7px 18px;
-                border-radius: 6px;
-                margin-top: 8px;
+                background-color: #4a90e2 !important;
+                color: white !important;
+                border-radius: 6px !important;
+                padding: 4px 8px !important;
+                font-size: normal !important;
+                margin-top: 0px !important;
             }
             QPushButton:hover {
-                background-color: #5a6268;
+                background-color: #357ABD !important;
             }
         """)
-        dialog.no_button.clicked.connect(dialog.reject)
+        no_button.clicked.connect(dialog.reject)
         
-        # Update the button layout
-        dialog.btn_row.addWidget(dialog.no_button)
-        dialog.btn_row.addWidget(dialog.ok_button)
+        # Update the button layout - clear existing widgets and add in correct order
+        # Remove existing widgets from btn_row
+        while dialog.btn_row.count():
+            child = dialog.btn_row.takeAt(0)
+            if child.widget():
+                child.widget().setParent(None)
+        
+        # Add buttons directly to btn_row in correct order: Yes, then No
+        dialog.btn_row.addStretch()
+        dialog.btn_row.addWidget(ok_button)  # Yes button
+        dialog.btn_row.addSpacing(10)
+        dialog.btn_row.addWidget(no_button)  # No button
+        dialog.btn_row.addStretch()
         
         result = dialog.exec()
         return result == QDialog.DialogCode.Accepted
@@ -242,15 +394,21 @@ class EditProfileDialog(QDialog):
         super().__init__(parent)
         self.profile_data = profile_data or {}
         self.setWindowTitle("Edit Profile")
-        self.setFixedSize(400, 300)
+        # Calculate dynamic height based on channel types
+        channel_types = self.load_channel_types()
+        rows_needed = (len(channel_types) + 1) // 2  # 2 buttons per row
+        extra_height = max(0, (rows_needed - 2)) * 40  # 40px per extra row, assuming 2 rows fit in base height
+        dynamic_height = 400 + extra_height
+        
+        self.setFixedSize(470, dynamic_height)
         self.setModal(True)
         self.init_ui()
         
     def init_ui(self):
         """Initialize the dialog UI"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        layout.setContentsMargins(22, 20, 22, 20)
+        layout.setSpacing(8)
         
         # Title
         title_label = QLabel("Edit Profile")
@@ -265,14 +423,14 @@ class EditProfileDialog(QDialog):
         
         # Form layout
         form_layout = QFormLayout()
-        form_layout.setSpacing(10)
+        form_layout.setSpacing(8)
         
         # Name field
         self.name_edit = QLineEdit()
         self.name_edit.setText(self.profile_data.get('name', ''))
         self.name_edit.setStyleSheet("""
             QLineEdit {
-                padding: 8px 8px;
+                padding: 4px 4px;
                 border: 1px solid #e0e0e0;
                 border-radius: 6px;
                 font-size: 14px;
@@ -287,7 +445,7 @@ class EditProfileDialog(QDialog):
         self.profile_edit.setReadOnly(True)  # Make it read-only
         self.profile_edit.setStyleSheet("""
             QLineEdit {
-                padding: 8px 8px;
+                padding: 4px 4px;
                 border: 1px solid #e0e0e0;
                 border-radius: 6px;
                 font-size: 14px;
@@ -297,20 +455,145 @@ class EditProfileDialog(QDialog):
         """)
         form_layout.addRow("Profile:", self.profile_edit)
         
-        # Channel Type field
-        self.channel_type_combo = QComboBox()
-        self.channel_type_combo.addItems(["user_custom", "Chrome Profile", "Standard", "Premium", "Basic"])
-        self.channel_type_combo.setCurrentText(self.profile_data.get('channel_type', 'user_custom'))
-        self.channel_type_combo.setStyleSheet("""
-            QComboBox {
-                padding: 8px 8px;
+        # Channel Types field (toggle buttons instead of list)
+        from PyQt6.QtWidgets import QFrame
+        
+        # Create a container for channel type buttons
+        self.channel_types_container = QFrame()
+        self.channel_types_container.setStyleSheet("""
+            QFrame {
+                background-color: #f8f9fa;
                 border: 1px solid #e0e0e0;
                 border-radius: 6px;
-                font-size: 14px;
-                background-color: white;
+                padding: 12px;
+                min-height: 90px;
             }
         """)
-        form_layout.addRow("Channel Type:", self.channel_type_combo)
+        
+        # Create layout for channel type buttons
+        self.channel_types_layout = QVBoxLayout(self.channel_types_container)
+        self.channel_types_layout.setSpacing(5)
+        self.channel_types_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Create grid layout for buttons (3 per row)
+        buttons_layout = QGridLayout()
+        buttons_layout.setSpacing(5)
+        
+        # Load channel types and create toggle buttons
+        channel_types = self.load_channel_types()
+        self.channel_type_buttons = {}
+        
+        for i, channel_type in enumerate(channel_types):
+            button = QPushButton(channel_type)
+            button.setCheckable(True)  # Make it a toggle button
+            button.setFixedSize(150, 30)
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: #ffffff;
+                    color: #333333;
+                    border: 1px solid #d0d0d0;
+                    border-radius: 4px;
+                    padding: 6px 12px;
+                    font-size: 12px;
+                    font-weight: 500;
+                }
+                QPushButton:hover {
+                    background-color: #f0f8ff;
+                    border: 1px solid #4a90e2;
+                }
+                QPushButton:pressed {
+                    background-color: #e3f2fd;
+                }
+                QPushButton:checked {
+                    background-color: #4a90e2;
+                    color: white;
+                    border: 1px solid #4a90e2;
+                    font-weight: 600;
+                }
+                QPushButton:checked:hover {
+                    background-color: #357ABD;
+                }
+                QPushButton:checked:pressed {
+                    background-color: #2e6da4;
+                }
+            """)
+            
+            # Store button reference
+            self.channel_type_buttons[channel_type] = button
+            
+            # Add button to grid (3 per row)
+            row = i // 2
+            col = i % 2
+            buttons_layout.addWidget(button, row, col)
+        
+        # Add utility buttons
+        utility_layout = QHBoxLayout()
+        utility_layout.setSpacing(5)
+        
+        # Select All button
+        select_all_btn = QPushButton("All")
+        select_all_btn.setFixedSize(60, 28)
+        select_all_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 5px 10px;
+                font-size: 12px;
+                font-weight: normal;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+        """)
+        select_all_btn.clicked.connect(self.select_all_channel_types)
+        
+        # Clear All button
+        clear_all_btn = QPushButton("Clear")
+        clear_all_btn.setFixedSize(60, 28)
+        clear_all_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 5px 10px;
+                font-size: 12px;
+                font-weight: normal;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+        """)
+        clear_all_btn.clicked.connect(self.clear_all_channel_types)
+        
+        utility_layout.addStretch()
+        utility_layout.addWidget(select_all_btn)
+        utility_layout.addWidget(clear_all_btn)
+        
+        # Add buttons layout to main layout
+        self.channel_types_layout.addLayout(buttons_layout)
+        
+        # Add utility buttons to the main layout
+        self.channel_types_layout.addLayout(utility_layout)
+               
+        # Set current selections
+        current_channel_types = self.profile_data.get('channel_types', [])
+        if isinstance(current_channel_types, str):
+            # Handle legacy single channel_type
+            current_channel_types = [current_channel_types] if current_channel_types else ['user_custom']
+        
+        for channel_type in current_channel_types:
+            if channel_type in self.channel_type_buttons:
+                self.channel_type_buttons[channel_type].setChecked(True)
+        
+        # Ensure at least one channel type is selected (default to user_custom)
+        if not any(button.isChecked() for button in self.channel_type_buttons.values()):
+            if 'user_custom' in self.channel_type_buttons:
+                self.channel_type_buttons['user_custom'].setChecked(True)
+        
+        form_layout.addRow("Channel Types:", self.channel_types_container)
         
         # Profile ID field (read-only for Chrome profiles)
         self.profile_id_edit = QLineEdit()
@@ -318,7 +601,7 @@ class EditProfileDialog(QDialog):
         self.profile_id_edit.setReadOnly(True)  # Make it read-only
         self.profile_id_edit.setStyleSheet("""
             QLineEdit {
-                padding: 8px 8px;
+                padding: 4px 4px;
                 border: 1px solid #e0e0e0;
                 border-radius: 6px;
                 font-size: 14px;
@@ -327,6 +610,21 @@ class EditProfileDialog(QDialog):
             }
         """)
         form_layout.addRow("Profile ID:", self.profile_id_edit)
+        
+        # Email field
+        self.email_edit = QLineEdit()
+        self.email_edit.setText(self.profile_data.get('email', ''))
+        self.email_edit.setPlaceholderText("Enter email address")
+        self.email_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Email:", self.email_edit)
         
         layout.addLayout(form_layout)
         
@@ -340,7 +638,7 @@ class EditProfileDialog(QDialog):
             QPushButton {
                 background-color: #4a90e2;
                 color: white;
-                border-radius: 4px;
+                border-radius: 6px;
                 padding: 4px 8px;
                 font-size: normal;
             }
@@ -357,7 +655,7 @@ class EditProfileDialog(QDialog):
             QPushButton {
                 background-color: #28a745;
                 color: white;
-                border-radius: 4px;
+                border-radius: 6px;
                 padding: 4px 8px;
                 font-size: normal;
             }
@@ -368,9 +666,12 @@ class EditProfileDialog(QDialog):
         
         # Buttons
         button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.setSpacing(0)
         button_layout.addStretch()
-        button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
+        button_layout.addSpacing(10)
+        button_layout.addWidget(cancel_btn)
         button_layout.addStretch()
         layout.addLayout(button_layout)
         
@@ -383,148 +684,44 @@ class EditProfileDialog(QDialog):
         return {
             'name': self.name_edit.text().strip(),
             'profile': self.profile_edit.text().strip(),
-            'channel_type': self.channel_type_combo.currentText(),
-            'profile_id': self.profile_id_edit.text().strip()
+            'channel_types': self.get_selected_channel_types(),
+            'profile_id': self.profile_id_edit.text().strip(),
+            'email': self.email_edit.text().strip()
         }
+        
+    def load_channel_types(self):
+        """Load channel types from config.json file"""
+        try:
+            with open('config.json', 'r', encoding='utf-8') as file:
+                config = json.load(file)
+                return config.get('channel_types', ['user_custom'])
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading config.json: {e}")
+            # Return default channel types if config file is not found or invalid
+            return ['user_custom', 'Chrome Profile', 'Standard', 'Premium', 'Basic']
+    
+    def get_selected_channel_types(self):
+        """Get the selected channel types from the toggle buttons"""
+        selected_types = []
+        for channel_type, button in self.channel_type_buttons.items():
+            if button.isChecked():
+                selected_types.append(channel_type)
+        return selected_types if selected_types else ['user_custom']
+    
+    def select_all_channel_types(self):
+        """Select all channel types"""
+        for button in self.channel_type_buttons.values():
+            button.setChecked(True)
+    
+    def clear_all_channel_types(self):
+        """Clear all channel types and set default to user_custom"""
+        for button in self.channel_type_buttons.values():
+            button.setChecked(False)
+        # Ensure at least one is selected (user_custom)
+        if 'user_custom' in self.channel_type_buttons:
+            self.channel_type_buttons['user_custom'].setChecked(True)
+    
 
-# Sample stylesheet with correct colors matching chrome
-STYLE_SHEET = """
-QWidget {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 12px;
-    color: #333333;
-    background-color: #f5f7fa;
-}
-
-QGroupBox {
-    font-weight: bold;
-    border: 2px solid #cccccc;
-    border-radius: 6px;
-    margin-top: 10px;
-    padding-top: 10px;
-    background-color: white;
-}
-
-QGroupBox::title {
-    subcontrol-origin: margin;
-    left: 10px;
-    padding: 0 5px 0 5px;
-    color: #333333;
-}
-
-QPushButton {
-    background-color: #4a90e2;
-    color: white;
-    border-radius: 6px;
-    padding: 6px 12px;
-}
-
-QPushButton:hover {
-    background-color: #357ABD;
-}
-
-QLineEdit {
-    background-color: #ffffff;
-    border: 1px solid #d0d0d0;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 12px;
-    color: #333;
-    font-family: 'Segoe UI', sans-serif;
-}
-
-QLineEdit:hover {
-    border: 2px solid #4a90e2;
-    background-color: #ffffff;
-}
-
-QComboBox {
-    background-color: #ffffff;
-    border: 1px solid #d0d0d0;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 12px;
-    color: #333;
-    font-family: 'Segoe UI', sans-serif;
-}
-
-QComboBox:hover {
-    border: 2px solid #4687f4;
-}
-
-QComboBox::drop-down {
-    border: none;
-    width: 0px;
-}
-
-QComboBox::down-arrow {
-    image: none;
-    border: none;
-    width: 0px;
-}
-
-QComboBox QAbstractItemView {
-    background-color: #ffffff;
-    selection-background-color: #3f92e3;
-    border: 1px solid #ccc;
-    outline: none;
-}
-
-QCheckBox {
-    spacing: 8px;
-    font-size: 13px;
-    color: #333;
-}
-
-QCheckBox::indicator {
-    width: 16px;
-    height: 16px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    background: #ffffff;
-}
-
-QCheckBox::indicator:hover {
-    background: #f5f9ff;
-}
-
-QCheckBox::indicator:unchecked {
-    background: #ffffff;
-    border: 1px solid #ccc;
-}
-
-QCheckBox::indicator:unchecked:hover {
-    background: #f5f9ff;
-}
-
-QCheckBox::indicator:checked {
-    background: #ffffff;
-    border: 1px solid #ccc;
-    image: url(src/sources/black_tick.svg);
-}
-
-QScrollBar:vertical {
-    background: rgba(240, 240, 240, 0.20);
-    width: 12px;
-    border-radius: 6px;
-    margin: 0px;
-}
-
-QScrollBar::handle:vertical {
-    background: rgba(192, 192, 192, 0.20);
-    border-radius: 6px;
-    min-height: 20px;
-    margin: 0px;
-}
-
-QScrollBar::handle:vertical:hover {
-    background: rgba(160, 160, 160, 0.35);
-}
-
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    height: 0px;
-}
-"""
 
 class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
     """Custom delegate to handle styling of deleted profiles"""
@@ -551,12 +748,12 @@ class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
             if text:
                 # Draw the text with proper alignment
                 alignment = Qt.AlignmentFlag.AlignVCenter
-                if index.column() in [0, 3, 4]:  # Number, Channel Type, Profile ID columns
+                if index.column() in [0, 4]:  # Number, Profile ID columns
                     alignment |= Qt.AlignmentFlag.AlignCenter
                     painter.drawText(option.rect, alignment, str(text))
                 else:
                     alignment |= Qt.AlignmentFlag.AlignLeft
-                    # Add left margin for Name and Profile columns
+                    # Add left margin for Name, Profile, Channel Types, and Email columns
                     rect = option.rect
                     rect.setLeft(rect.left() + 12)  # Add 12px left margin
                     painter.drawText(rect, alignment, str(text))
@@ -571,16 +768,53 @@ class SamplechromeUI(QWidget):
     def __init__(self):
         super().__init__()
         self.settings = QSettings('Samplechrome', 'SamplechromeUI')
+        self.config = self.load_config()
         self.profiles = self.load_profiles()
         self.init_ui()
         self.load_window_position()
+
+    def load_config(self):
+        """Load configuration from config.json file"""
+        try:
+            with open('config.json', 'r', encoding='utf-8') as file:
+                return json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading config.json: {e}")
+            # Return default config if file is not found or invalid
+            return {
+                'channel_types': ['user_custom', 'Chrome Profile', 'Standard', 'Premium', 'Basic'],
+                'app_settings': {
+                    'window_title': 'Sample chrome UI',
+                    'window_size': [600, 500],
+                    'icon_path': 'src/sources/icon.png'
+                }
+            }
 
     def load_profiles(self):
         """Load profiles from profile.json file"""
         try:
             with open('profile.json', 'r', encoding='utf-8') as file:
                 data = json.load(file)
-                return data.get('profiles', [])
+                profiles = data.get('profiles', [])
+                
+                # Migrate existing profiles to include email field and channel_types if not present
+                migrated = False
+                for profile in profiles:
+                    if 'email' not in profile:
+                        profile['email'] = ''
+                        migrated = True
+                    
+                    # Migrate channel_type to channel_types
+                    if 'channel_type' in profile and 'channel_types' not in profile:
+                        channel_type = profile.get('channel_type', 'user_custom')
+                        profile['channel_types'] = [channel_type] if channel_type else ['user_custom']
+                        migrated = True
+                
+                # Save migrated profiles back to file
+                if migrated:
+                    self.save_profiles(profiles)
+                
+                return profiles
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error loading profiles: {e}")
             return []
@@ -612,16 +846,123 @@ class SamplechromeUI(QWidget):
                     
                     for profile_id, profile_data in profile_info.items():
                         profile_name = profile_data.get('name', f'Profile {profile_id}')
+                        
+                        # Try to get email from profile preferences
+                        email = self.get_profile_email(chrome_data_dir, profile_id)
+                        
                         chrome_profiles.append({
                             'name': '',
                             'profile': profile_name,
-                            'channel_type': 'user_custom',
-                            'profile_id': profile_id
+                            'channel_types': ['user_custom'],
+                            'profile_id': profile_id,
+                            'email': email
                         })
             except (json.JSONDecodeError, KeyError) as e:
                 print(f"Error reading Chrome profiles: {e}")
         
         return chrome_profiles
+
+    def get_profile_email(self, chrome_data_dir, profile_id):
+        """Extract email from Chrome profile using multiple methods"""
+        email = ''
+        
+        # Method 1: Try to get email from Local State file (most reliable)
+        try:
+            local_state_path = os.path.join(chrome_data_dir, 'Local State')
+            if os.path.exists(local_state_path):
+                with open(local_state_path, 'r', encoding='utf-8') as f:
+                    local_state = json.load(f)
+                    profile_info = local_state.get('profile', {}).get('info_cache', {})
+                    
+                    if profile_id in profile_info:
+                        profile_data = profile_info[profile_id]
+                        
+                        # Check user_name field (often contains email)
+                        user_name = profile_data.get('user_name', '')
+                        if user_name and '@' in user_name:
+                            email = user_name
+                        
+                        # Check gaia_id (Google account ID)
+                        gaia_id = profile_data.get('gaia_id', '')
+                        if gaia_id and not email:
+                            # Try to extract email from gaia_id or related fields
+                            pass
+        except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
+            print(f"Error reading Local State for profile {profile_id}: {e}")
+        
+        # Method 2: Try to get email from profile preferences file
+        if not email:
+            try:
+                preferences_path = os.path.join(chrome_data_dir, profile_id, 'Preferences')
+                
+                if os.path.exists(preferences_path):
+                    with open(preferences_path, 'r', encoding='utf-8') as f:
+                        preferences = json.load(f)
+                        
+                        # Check account_id_migration_state
+                        account_migration = preferences.get('account_id_migration_state', {})
+                        if account_migration:
+                            email = account_migration.get('email', '')
+                        
+                        # Check profile content settings
+                        if not email:
+                            profile = preferences.get('profile', {})
+                            if profile:
+                                email = profile.get('email_address', '')
+                        
+                        # Check signin
+                        if not email:
+                            signin = preferences.get('signin', {})
+                            if signin:
+                                email = signin.get('email', '')
+                        
+                        # Check account_tracker_service
+                        if not email:
+                            account_tracker = preferences.get('account_tracker_service', {})
+                            if account_tracker:
+                                accounts = account_tracker.get('accounts', {})
+                                for account_id, account_data in accounts.items():
+                                    if isinstance(account_data, dict) and 'email' in account_data:
+                                        email = account_data['email']
+                                        break
+                        
+                        # Check identity
+                        if not email:
+                            identity = preferences.get('identity', {})
+                            if identity:
+                                email = identity.get('primary_account_email', '')
+                        
+                        # Check sync
+                        if not email:
+                            sync = preferences.get('sync', {})
+                            if sync:
+                                email = sync.get('requested', {}).get('email', '')
+            except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
+                print(f"Error reading preferences for profile {profile_id}: {e}")
+        
+        # Method 3: Try to get email from Secure Preferences file
+        if not email:
+            try:
+                secure_preferences_path = os.path.join(chrome_data_dir, profile_id, 'Secure Preferences')
+                
+                if os.path.exists(secure_preferences_path):
+                    with open(secure_preferences_path, 'r', encoding='utf-8') as f:
+                        secure_preferences = json.load(f)
+                        
+                        # Check account_id_migration_state in secure preferences
+                        account_migration = secure_preferences.get('account_id_migration_state', {})
+                        if account_migration:
+                            email = account_migration.get('email', '')
+                        
+                        # Check profile in secure preferences
+                        if not email:
+                            profile = secure_preferences.get('profile', {})
+                            if profile:
+                                email = profile.get('email_address', '')
+            except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
+                print(f"Error reading Secure Preferences for profile {profile_id}: {e}")
+        
+        return email.strip() if email else ''
 
     def validate_profile_exists(self, profile_id):
         """Check if a Chrome profile actually exists on disk"""
@@ -654,10 +995,9 @@ class SamplechromeUI(QWidget):
         if deleted_profiles:
             # Show confirmation dialog with list of profiles to be deleted
             profile_names = [p.get('profile', '') for p in deleted_profiles]
-            confirmation_message = f"Are you sure you want to remove {len(deleted_profiles)} deleted Chrome profiles?\n\n"
-            confirmation_message += f"The following profiles will be removed from the list:\n"
-            confirmation_message += f"• {', '.join(profile_names)}\n\n"
-            confirmation_message += "This action cannot be undone."
+            confirmation_message = f"{len(deleted_profiles)} profiles will be removed:\n\n"
+            confirmation_message += f"{' , '.join(profile_names)}\n\n"
+            confirmation_message += "This action cannot be undone.\n"
             
             # Create custom confirmation dialog
             reply = CustomMessageBox.show_confirmation(self, "Confirm Cleanup", confirmation_message)
@@ -687,9 +1027,8 @@ class SamplechromeUI(QWidget):
             profile_names = [p.get('profile', '') for p in deleted_profiles]
             CustomMessageBox.show_warning(self, "Deleted Profiles Found", 
                                         f"Found {len(deleted_profiles)} deleted Chrome profiles:\n\n"
-                                        f"• {', '.join(profile_names)}\n\n"
-                                        "These profiles are highlighted in red.\n"
-                                        "Use the 'Cleanup' button to remove them from the list.")
+                                        f"{' , '.join(profile_names)}")
+
 
     def save_profiles(self, profiles):
         """Save profiles to profile.json file"""
@@ -704,9 +1043,13 @@ class SamplechromeUI(QWidget):
     def init_ui(self):
         """Initialize the user interface"""
         # Set window properties
-        self.setWindowTitle(WINDOW_TITLE)
+        app_settings = self.config.get('app_settings', {})
+        window_title = app_settings.get('window_title', WINDOW_TITLE)
+        window_size = app_settings.get('window_size', WINDOW_SIZE)
+        
+        self.setWindowTitle(window_title)
         self.setMinimumSize(400, 400)
-        self.resize(WINDOW_SIZE[0], WINDOW_SIZE[1])
+        self.resize(window_size[0], window_size[1])
         self.setStyleSheet(STYLE_SHEET)
         
         # Add keyboard shortcuts
@@ -727,7 +1070,7 @@ class SamplechromeUI(QWidget):
         self.setLayout(layout)
         
         # Check for deleted profiles on startup after window is shown
-        QTimer.singleShot(500, self.check_deleted_profiles_on_startup)
+        QTimer.singleShot(2000, self.check_deleted_profiles_on_startup)
 
     def create_title_area(self, layout):
         """Create the title area with icon and app name"""
@@ -815,8 +1158,8 @@ class SamplechromeUI(QWidget):
         """Create the profiles display section"""
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
-        self.profiles_table.setColumnCount(5)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Type", "Profile ID"])
+        self.profiles_table.setColumnCount(6)
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Types", "Profile ID", "Sign in"])
         
         # Set custom delegate for styling deleted profiles
         self.table_delegate = DeletedProfileDelegate(self.profiles_table)
@@ -848,6 +1191,7 @@ class SamplechromeUI(QWidget):
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # Profile
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Channel Type
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)  # Email
         
         # Set table style
         self.profiles_table.setStyleSheet("""
@@ -1054,8 +1398,14 @@ class SamplechromeUI(QWidget):
             profile_item = QTableWidgetItem(profile_name)
             self.profiles_table.setItem(row, 2, profile_item)
             
-            # Channel Type
-            channel_type_item = QTableWidgetItem(profile.get('channel_type', ''))
+            # Channel Types
+            channel_types = profile.get('channel_types', [])
+            if isinstance(channel_types, str):
+                # Handle legacy single channel_type
+                channel_types = [channel_types] if channel_types else []
+            
+            channel_types_text = ', '.join(channel_types) if channel_types else ''
+            channel_type_item = QTableWidgetItem(channel_types_text)
             channel_type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.profiles_table.setItem(row, 3, channel_type_item)
             
@@ -1064,6 +1414,11 @@ class SamplechromeUI(QWidget):
             profile_id_item = QTableWidgetItem(profile_id)
             profile_id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.profiles_table.setItem(row, 4, profile_id_item)
+            
+            # Email
+            email = profile.get('email', '')
+            email_item = QTableWidgetItem(email)
+            self.profiles_table.setItem(row, 5, email_item)
             
             # Track deleted profiles for custom delegate
             if not profile_exists:
@@ -1139,7 +1494,9 @@ class SamplechromeUI(QWidget):
             self.restoreGeometry(geometry)
         else:
             # Default position if no saved position exists
-            self.resize(WINDOW_SIZE[0], WINDOW_SIZE[1])
+            app_settings = self.config.get('app_settings', {})
+            window_size = app_settings.get('window_size', WINDOW_SIZE)
+            self.resize(window_size[0], window_size[1])
             self.center_window()
     
     def save_window_position(self):
