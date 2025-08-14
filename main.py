@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QScrollArea, QGroupBox, QFormLayout, QCheckBox, QComboBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QDialog
 )
-from PyQt6.QtCore import Qt, QSettings, QSize
+from PyQt6.QtCore import Qt, QSettings, QSize, QTimer
 from PyQt6.QtGui import QIcon, QPixmap
 
 # Sample configuration constants
@@ -64,7 +64,7 @@ class CustomMessageBox(QDialog):
             }}
             QPushButton {{
                 background-color: {self.get_button_color()};
-                color: white;
+                color: {self.get_button_text_color()};
                 font-size: 13px;
                 padding: 7px 18px;
                 border-radius: 6px;
@@ -140,7 +140,7 @@ class CustomMessageBox(QDialog):
         colors = {
             "info": "#4a90e2",
             "success": "#28a745",
-            "warning": "#e67e22",
+            "warning": "#ffc107", #e67e22
             "error": "#dc3545"
         }
         return colors.get(self.message_type, "#4a90e2")
@@ -150,10 +150,20 @@ class CustomMessageBox(QDialog):
         colors = {
             "info": "#357ABD",
             "success": "#218838", 
-            "warning": "#d35400",
+            "warning": "#e0a800", #d35400
             "error": "#c82333"
         }
         return colors.get(self.message_type, "#357ABD")
+    
+    def get_button_text_color(self):
+        """Get button text color based on message type"""
+        colors = {
+            "info": "white",
+            "success": "white",
+            "warning": "black",
+            "error": "white"
+        }
+        return colors.get(self.message_type, "white")
     
     @staticmethod
     def show_info(parent, title, message):
@@ -761,8 +771,8 @@ class SamplechromeUI(QWidget):
         buttons_layout.setSpacing(10)
         
         # Add refresh button
-        refresh_btn = QPushButton("Refresh Profiles")
-        refresh_btn.setFixedSize(120, 30)
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.setFixedSize(80, 30)
         refresh_btn.clicked.connect(self.refresh_profiles)
         refresh_btn.setStyleSheet("""
             QPushButton {
@@ -779,8 +789,8 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add collect Chrome profiles button
-        chrome_btn = QPushButton("Collect Profiles")
-        chrome_btn.setFixedSize(120, 30)
+        chrome_btn = QPushButton("Collect")
+        chrome_btn.setFixedSize(80, 30)
         chrome_btn.clicked.connect(self.collect_chrome_profiles)
         chrome_btn.setStyleSheet("""
             QPushButton {
@@ -818,21 +828,22 @@ class SamplechromeUI(QWidget):
         edit_btn.clicked.connect(self.edit_selected_profile)
         edit_btn.setStyleSheet("""
             QPushButton {
-                background-color: #ffc107;
+                background-color: #ffffff;
                 color: #333333;
-                border-radius: 4px;
-                padding: 4px 8px;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 8px 16px;
                 font-weight: 500;
             }
             QPushButton:hover {
-                background-color: #e0a800;
+                border: 2px solid #47a4ff;
             }
         """)
         
         buttons_layout.addWidget(chrome_btn)
         buttons_layout.addWidget(refresh_btn)
-        buttons_layout.addStretch()
         buttons_layout.addWidget(edit_btn)
+        buttons_layout.addStretch()
         buttons_layout.addWidget(launch_btn)
   
         layout.addWidget(self.profiles_table)
@@ -874,7 +885,16 @@ class SamplechromeUI(QWidget):
         """Refresh the profiles table with updated data from profile.json"""
         self.profiles = self.load_profiles()
         self.populate_profiles_table()
-        print("Profiles refreshed successfully!")
+        
+        # Create custom dialog with auto-close for refresh success
+        dialog = CustomMessageBox(self, "Refresh Complete", "Loading from Updated JSON file ", "success")
+        
+        # Set up auto-close timer
+        timer = QTimer(dialog)
+        timer.timeout.connect(dialog.accept)
+        timer.start(1500)  # Auto-close after 1 second
+        
+        dialog.exec()
 
     def collect_chrome_profiles(self):
         """Collect Chrome profiles and add them to the existing profiles"""
