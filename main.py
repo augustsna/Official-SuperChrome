@@ -2178,9 +2178,6 @@ class SamplechromeUI(QWidget):
             # Special handling for Profile ID column to use natural sorting
             if sort_field == "Profile ID":
                 self.custom_sort_profile_id_column(reverse_order)
-            # Special handling for Amount column to use numerical sorting
-            elif sort_field == "Amount":
-                self.custom_sort_amount_column(reverse_order)
             else:
                 # Use default Qt sorting for other columns
                 self.profiles_table.sortItems(column_index, Qt.SortOrder.AscendingOrder if not reverse_order else Qt.SortOrder.DescendingOrder)
@@ -2198,43 +2195,6 @@ class SamplechromeUI(QWidget):
         
         # Sort using natural sorting key for Profile ID column (column 8)
         rows_data.sort(key=lambda row: natural_sort_key(row[8]), reverse=reverse_order)
-        
-        # Clear the table and repopulate with sorted data
-        self.profiles_table.setRowCount(0)
-        self.profiles_table.setRowCount(len(rows_data))
-        
-        for row, row_data in enumerate(rows_data):
-            for col, cell_data in enumerate(row_data):
-                item = QTableWidgetItem(cell_data)
-                # Apply center alignment for specific columns
-                if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.profiles_table.setItem(row, col, item)
-
-    def custom_sort_amount_column(self, reverse_order=False):
-        """Custom sort for Amount column using numerical sorting"""
-        # Get all rows data
-        rows_data = []
-        for row in range(self.profiles_table.rowCount()):
-            row_data = []
-            for col in range(self.profiles_table.columnCount()):
-                item = self.profiles_table.item(row, col)
-                row_data.append(item.text() if item else "")
-            rows_data.append(row_data)
-        
-        # Sort using numerical sorting key for Amount column (column 7)
-        def numerical_sort_key(row):
-            amount_text = row[7]  # Amount column
-            if not amount_text or amount_text.strip() == "":
-                return float('inf') if not reverse_order else float('-inf')  # Empty values sort to the end for ascending, beginning for descending
-            try:
-                # Try to convert to float for numerical sorting
-                return float(amount_text)
-            except ValueError:
-                # If not a number, sort as string (alphabetically)
-                return float('inf') if reverse_order else float('-inf')
-        
-        rows_data.sort(key=numerical_sort_key, reverse=reverse_order)
         
         # Clear the table and repopulate with sorted data
         self.profiles_table.setRowCount(0)
