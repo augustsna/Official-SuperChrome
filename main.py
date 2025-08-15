@@ -458,20 +458,6 @@ class EditProfileDialog(QDialog):
         form_layout = QFormLayout()
         form_layout.setSpacing(8)
         
-        # Name field
-        self.name_edit = QLineEdit()
-        self.name_edit.setText(self.profile_data.get('name', ''))
-        self.name_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 4px 4px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                font-size: 14px;
-                background-color: white;
-            }
-        """)
-        form_layout.addRow("Name:", self.name_edit)
-        
         # Profile field (read-only)
         self.profile_edit = QLineEdit()
         self.profile_edit.setText(self.profile_data.get('profile', ''))
@@ -487,6 +473,38 @@ class EditProfileDialog(QDialog):
             }
         """)
         form_layout.addRow("Profile:", self.profile_edit)
+        
+        # Profile ID field (read-only for Chrome profiles)
+        self.profile_id_edit = QLineEdit()
+        self.profile_id_edit.setText(self.profile_data.get('profile_id', ''))
+        self.profile_id_edit.setReadOnly(True)  # Make it read-only
+        self.profile_id_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: #f8f9fa;
+                color: #6c757d;
+            }
+        """)
+        form_layout.addRow("Profile ID:", self.profile_id_edit)
+        
+        # Email field (read-only)
+        self.email_edit = QLineEdit()
+        self.email_edit.setText(self.profile_data.get('email', ''))
+        self.email_edit.setReadOnly(True)  # Make it read-only
+        self.email_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: #f8f9fa;
+                color: #6c757d;
+            }
+        """)
+        form_layout.addRow("Email:", self.email_edit)
         
         # Channel Types field (toggle buttons instead of list)
         from PyQt6.QtWidgets import QFrame
@@ -757,37 +775,6 @@ class EditProfileDialog(QDialog):
         
         form_layout.addRow("Sub type:", self.sub_types_container)
         
-        # Profile ID field (read-only for Chrome profiles)
-        self.profile_id_edit = QLineEdit()
-        self.profile_id_edit.setText(self.profile_data.get('profile_id', ''))
-        self.profile_id_edit.setReadOnly(True)  # Make it read-only
-        self.profile_id_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 4px 4px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                font-size: 14px;
-                background-color: #f8f9fa;
-                color: #6c757d;
-            }
-        """)
-        form_layout.addRow("Profile ID:", self.profile_id_edit)
-        
-        # Email field
-        self.email_edit = QLineEdit()
-        self.email_edit.setText(self.profile_data.get('email', ''))
-        self.email_edit.setPlaceholderText("Enter email address")
-        self.email_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 4px 4px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                font-size: 14px;
-                background-color: white;
-            }
-        """)
-        form_layout.addRow("Email:", self.email_edit)
-        
         # Total Channel field
         self.total_channel_edit = QLineEdit()
         self.total_channel_edit.setText(self.profile_data.get('total_channel', ''))
@@ -817,6 +804,20 @@ class EditProfileDialog(QDialog):
             }
         """)
         form_layout.addRow("Notes:", self.notes_edit)
+        
+        # Name field
+        self.name_edit = QLineEdit()
+        self.name_edit.setText(self.profile_data.get('name', ''))
+        self.name_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Name:", self.name_edit)
         
         layout.addLayout(form_layout)
         
@@ -2063,6 +2064,10 @@ class SamplechromeUI(QWidget):
         # Update filter options
         self.update_channel_type_filter_options()
         self.update_sub_type_filter_options()
+        
+        # Select the first row if there are profiles
+        if self.profiles_table.rowCount() > 0:
+            self.profiles_table.setCurrentCell(0, 0)
 
     def update_channel_type_filter_options(self):
         """Update the channel type filter dropdown with options from config.json"""
