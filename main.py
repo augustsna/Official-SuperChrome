@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import platform
+import re
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -976,6 +977,18 @@ class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
         else:
             # Use default painting for non-deleted profiles
             super().paint(painter, option, index)
+
+
+def natural_sort_key(text):
+    """
+    Generate a key for natural sorting that handles numeric parts correctly.
+    This function splits strings into alternating text and number parts,
+    converting numeric parts to integers for proper numerical sorting.
+    """
+    # Split the text into alternating text and number parts
+    parts = re.split(r'(\d+)', str(text))
+    # Convert numeric parts to integers, keep text parts as strings
+    return [int(part) if part.isdigit() else part.lower() for part in parts]
 
 
 class SamplechromeUI(QWidget):
@@ -2130,8 +2143,39 @@ class SamplechromeUI(QWidget):
         if column_index is not None:
             # Determine sort order (A-Z = ascending, Z-A = descending)
             reverse_order = (sort_order == "Z-A")
-            # Sort the table by the specified column
-            self.profiles_table.sortItems(column_index, Qt.SortOrder.AscendingOrder if not reverse_order else Qt.SortOrder.DescendingOrder)
+            
+            # Special handling for Profile ID column to use natural sorting
+            if sort_field == "Profile ID":
+                self.custom_sort_profile_id_column(reverse_order)
+            else:
+                # Use default Qt sorting for other columns
+                self.profiles_table.sortItems(column_index, Qt.SortOrder.AscendingOrder if not reverse_order else Qt.SortOrder.DescendingOrder)
+
+    def custom_sort_profile_id_column(self, reverse_order=False):
+        """Custom sort for Profile ID column using natural sorting"""
+        # Get all rows data
+        rows_data = []
+        for row in range(self.profiles_table.rowCount()):
+            row_data = []
+            for col in range(self.profiles_table.columnCount()):
+                item = self.profiles_table.item(row, col)
+                row_data.append(item.text() if item else "")
+            rows_data.append(row_data)
+        
+        # Sort using natural sorting key for Profile ID column (column 6)
+        rows_data.sort(key=lambda row: natural_sort_key(row[6]), reverse=reverse_order)
+        
+        # Clear the table and repopulate with sorted data
+        self.profiles_table.setRowCount(0)
+        self.profiles_table.setRowCount(len(rows_data))
+        
+        for row, row_data in enumerate(rows_data):
+            for col, cell_data in enumerate(row_data):
+                item = QTableWidgetItem(cell_data)
+                # Apply center alignment for specific columns
+                if col in [0, 3, 4, 5, 6]:  # Number, Channel Types, Sub Type, Total Channel, Profile ID columns
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.profiles_table.setItem(row, col, item)
 
     def refresh_profiles(self):
         """Refresh the profiles table with updated data from profile.json"""
