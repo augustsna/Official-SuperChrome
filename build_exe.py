@@ -51,7 +51,7 @@ def build_executable():
     
     # PyInstaller command
     cmd = [
-        "pyinstaller",
+        sys.executable, "-m", "PyInstaller",
         "--onefile",  # Create a single executable file
         "--windowed",  # Don't show console window
         f"--icon={icon_path}",  # Set the icon

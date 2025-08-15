@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['main.py'],
+    ['C:\\Users\\Rome\\Documents\\github\\SimpleChrome\\main.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['src\\icon.png'],
+    icon=['C:\\Users\\Rome\\Documents\\github\\SimpleChrome\\src\\icon.png'],
 )
