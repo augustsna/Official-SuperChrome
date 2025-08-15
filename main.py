@@ -417,13 +417,23 @@ class EditProfileDialog(QDialog):
         super().__init__(parent)
         self.profile_data = profile_data or {}
         self.setWindowTitle("Edit Profile")
-        # Calculate dynamic height based on channel types
+        # Calculate dynamic height based on channel types and sub types
         channel_types = self.load_channel_types()
-        rows_needed = (len(channel_types) + 1) // 2  # 2 buttons per row
-        extra_height = max(0, (rows_needed - 2)) * 40  # 40px per extra row, assuming 2 rows fit in base height
-        dynamic_height = 410 + extra_height
+        sub_types = self.load_sub_types()
         
-        self.setFixedSize(470, dynamic_height)
+        # Calculate extra height for channel types (3 buttons per row)
+        channel_rows_needed = (len(channel_types) + 2) // 3  # 3 buttons per row
+        channel_extra_height = max(0, (channel_rows_needed - 2)) * 40  # 40px per extra row
+        
+        # Calculate extra height for sub types (2 buttons per row)
+        sub_rows_needed = (len(sub_types) + 1) // 2  # 2 buttons per row
+        sub_extra_height = max(0, (sub_rows_needed - 2)) * 40  # 40px per extra row
+        
+        # Total extra height needed
+        total_extra_height = channel_extra_height + sub_extra_height
+        dynamic_height = 610 + total_extra_height
+        
+        self.setFixedSize(500, dynamic_height)
         self.setModal(True)
         self.init_ui()
         
@@ -965,7 +975,7 @@ class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
             if text:
                 # Draw the text with proper alignment
                 alignment = Qt.AlignmentFlag.AlignVCenter
-                if index.column() in [0, 4, 5, 6]:  # Number, Sub Type, Total Channel, Profile ID columns
+                if index.column() in [0, 4, 7, 8]:  # Number, Sub Type, Amount, Profile ID columns
                     alignment |= Qt.AlignmentFlag.AlignCenter
                     painter.drawText(option.rect, alignment, str(text))
                 else:
@@ -1728,7 +1738,7 @@ class SamplechromeUI(QWidget):
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
         self.profiles_table.setColumnCount(9)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Amount", "Profile ID", "Sign in", "Notes"])
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Sign in", "Notes", "Amount", "Profile ID"])
         
         # Set custom delegate for styling deleted profiles
         self.table_delegate = DeletedProfileDelegate(self.profiles_table)
@@ -1760,10 +1770,10 @@ class SamplechromeUI(QWidget):
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Profile
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Channel Type
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Sub Type
-        header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Total Channel
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)  # Email
-        header.setSectionResizeMode(8, QHeaderView.ResizeMode.Stretch)  # Notes
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)  # Email
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Notes
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Amount
+        header.setSectionResizeMode(8, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
         
         # Set table style
         self.profiles_table.setStyleSheet("""
@@ -1995,27 +2005,27 @@ class SamplechromeUI(QWidget):
             sub_type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.profiles_table.setItem(row, 4, sub_type_item)
             
+            # Email
+            email = profile.get('email', '')
+            email_item = QTableWidgetItem(email)
+            self.profiles_table.setItem(row, 5, email_item)
+            
+            # Notes
+            notes = profile.get('notes', '')
+            notes_item = QTableWidgetItem(notes)
+            self.profiles_table.setItem(row, 6, notes_item)
+            
             # Total Channel
             total_channel = profile.get('total_channel', '')
             total_channel_item = QTableWidgetItem(total_channel)
             total_channel_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 5, total_channel_item)
+            self.profiles_table.setItem(row, 7, total_channel_item)
             
             # Profile ID
             profile_id = profile.get('profile_id', '')
             profile_id_item = QTableWidgetItem(profile_id)
             profile_id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 6, profile_id_item)
-            
-            # Email
-            email = profile.get('email', '')
-            email_item = QTableWidgetItem(email)
-            self.profiles_table.setItem(row, 7, email_item)
-            
-            # Notes
-            notes = profile.get('notes', '')
-            notes_item = QTableWidgetItem(notes)
-            self.profiles_table.setItem(row, 8, notes_item)
+            self.profiles_table.setItem(row, 8, profile_id_item)
             
             # Track deleted profiles for custom delegate
             if not profile_exists:
@@ -2086,10 +2096,10 @@ class SamplechromeUI(QWidget):
             # Get text from searchable columns
             name = self.profiles_table.item(row, 1).text().lower() if self.profiles_table.item(row, 1) else ""
             profile = self.profiles_table.item(row, 2).text().lower() if self.profiles_table.item(row, 2) else ""
-            email = self.profiles_table.item(row, 7).text().lower() if self.profiles_table.item(row, 7) else ""
-            notes = self.profiles_table.item(row, 8).text().lower() if self.profiles_table.item(row, 8) else ""
-            total_channel = self.profiles_table.item(row, 5).text().lower() if self.profiles_table.item(row, 5) else ""
-            profile_id = self.profiles_table.item(row, 6).text().lower() if self.profiles_table.item(row, 6) else ""
+            email = self.profiles_table.item(row, 5).text().lower() if self.profiles_table.item(row, 5) else ""
+            notes = self.profiles_table.item(row, 6).text().lower() if self.profiles_table.item(row, 6) else ""
+            total_channel = self.profiles_table.item(row, 7).text().lower() if self.profiles_table.item(row, 7) else ""
+            profile_id = self.profiles_table.item(row, 8).text().lower() if self.profiles_table.item(row, 8) else ""
             channel_types = self.profiles_table.item(row, 3).text().lower() if self.profiles_table.item(row, 3) else ""
             sub_types = self.profiles_table.item(row, 4).text().lower() if self.profiles_table.item(row, 4) else ""
             
@@ -2142,11 +2152,11 @@ class SamplechromeUI(QWidget):
         elif sort_field == "Profile":
             column_index = 2
         elif sort_field == "Email":
-            column_index = 7
-        elif sort_field == "Amount":
             column_index = 5
+        elif sort_field == "Amount":
+            column_index = 7
         elif sort_field == "Profile ID":
-            column_index = 6
+            column_index = 8
         
         if column_index is not None:
             # Determine sort order (A-Z = ascending, Z-A = descending)
@@ -2170,8 +2180,8 @@ class SamplechromeUI(QWidget):
                 row_data.append(item.text() if item else "")
             rows_data.append(row_data)
         
-        # Sort using natural sorting key for Profile ID column (column 6)
-        rows_data.sort(key=lambda row: natural_sort_key(row[6]), reverse=reverse_order)
+        # Sort using natural sorting key for Profile ID column (column 8)
+        rows_data.sort(key=lambda row: natural_sort_key(row[8]), reverse=reverse_order)
         
         # Clear the table and repopulate with sorted data
         self.profiles_table.setRowCount(0)
@@ -2181,7 +2191,7 @@ class SamplechromeUI(QWidget):
             for col, cell_data in enumerate(row_data):
                 item = QTableWidgetItem(cell_data)
                 # Apply center alignment for specific columns
-                if col in [0, 3, 4, 5, 6]:  # Number, Channel Types, Sub Type, Total Channel, Profile ID columns
+                if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.profiles_table.setItem(row, col, item)
 
