@@ -1,0 +1,19 @@
+{
+  "channel_types": [
+    "Standard",
+    "Premium",
+    "Basic"
+  ],
+  "sub_types": [
+    "Personal",
+    "Standard",
+    "Premium",
+    "Basic",
+    "Business"
+  ],
+  "app_settings": {
+    "window_title": "Sample chrome UI",
+    "window_size": [600, 500],
+    "icon_path": "src/icon.png"
+  }
+}
