@@ -1,15 +1,17 @@
 {
   "channel_types": [
-    "Standard",
-    "Premium",
-    "Basic"
+    "user_custom",
+    "Music",
+    "Story",
+    "Live",
+    "Game",
+    "AI",
+    "Other"
   ],
   "sub_types": [
-    "Personal",
-    "Standard",
-    "Premium",
-    "Basic",
-    "Business"
+    "Ragged",
+    "Country",
+    "Other"
   ],
   "app_settings": {
     "window_title": "Sample chrome UI",

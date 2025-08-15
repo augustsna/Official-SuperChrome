@@ -421,9 +421,9 @@ class EditProfileDialog(QDialog):
         channel_types = self.load_channel_types()
         sub_types = self.load_sub_types()
         
-        # Calculate extra height for channel types (3 buttons per row)
-        channel_rows_needed = (len(channel_types) + 2) // 3  # 3 buttons per row
-        channel_extra_height = max(0, (channel_rows_needed - 2)) * 40  # 40px per extra row
+        # Calculate extra height for channel types (2 buttons per row)
+        channel_rows_needed = (len(channel_types) + 2) // 2  
+        channel_extra_height = max(0, (channel_rows_needed - 2)) * 40
         
         # Calculate extra height for sub types (2 buttons per row)
         sub_rows_needed = (len(sub_types) + 1) // 2  # 2 buttons per row
