@@ -1309,7 +1309,7 @@ class SamplechromeUI(QWidget):
         window_size = app_settings.get('window_size', WINDOW_SIZE)
         
         self.setWindowTitle(window_title)
-        self.setMinimumSize(400, 400)
+        self.setMinimumSize(600, 500)
         self.resize(window_size[0], window_size[1])
         self.setStyleSheet(STYLE_SHEET)
         
@@ -1324,7 +1324,7 @@ class SamplechromeUI(QWidget):
         
         # Create main layout
         layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(0, 0, 0, 10)
         layout.setSpacing(0)
 
         # --- TITLE AREA ---
@@ -1341,7 +1341,7 @@ class SamplechromeUI(QWidget):
     def create_title_area(self, layout):
         """Create the title area with icon and app name"""
         title_widget = QtWidgets.QWidget()
-        title_widget.setFixedHeight(50)
+        title_widget.setFixedHeight(100)
         title_widget.setStyleSheet("background-color: transparent;")
         
         # Title icon
@@ -1413,7 +1413,7 @@ class SamplechromeUI(QWidget):
         
         # Set height constraints for the scroll area
         scroll_area.setMinimumHeight(200)
-        scroll_area.setMaximumHeight(414)  # Limit maximum height to prevent taking too much space
+        # Remove maximum height limit to allow table to resize with window
         
         layout.addWidget(scroll_area)
         
@@ -1427,11 +1427,12 @@ class SamplechromeUI(QWidget):
         search_layout.setSpacing(8)
         
         # First row - Search functionality
-        search_row1 = QHBoxLayout()
-        search_row1.setSpacing(10)
+        
         
         # Search label
         search_label = QLabel("Search:")
+        search_label.setFixedSize(80, 32)
+        search_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         search_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -1443,7 +1444,7 @@ class SamplechromeUI(QWidget):
         # Search input field
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search profiles...")
-        self.search_input.setFixedSize(180, 32)
+        self.search_input.setFixedSize(210, 32)
         self.search_input.textChanged.connect(self.filter_profiles_table)
         self.search_input.setStyleSheet("""
             QLineEdit {
@@ -1475,7 +1476,7 @@ class SamplechromeUI(QWidget):
             "Profile ID"
         ])
         self.search_scope.setCurrentText("All Fields")
-        self.search_scope.setFixedSize(100, 32)
+        self.search_scope.setFixedSize(120, 32)
         self.search_scope.currentTextChanged.connect(self.filter_profiles_table)
         self.search_scope.setStyleSheet("""
             QComboBox {
@@ -1510,6 +1511,8 @@ class SamplechromeUI(QWidget):
         
         # Sort field label
         sort_field_label = QLabel("Sort Field:")
+        sort_field_label.setFixedSize(80, 32)
+        sort_field_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sort_field_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -1524,10 +1527,10 @@ class SamplechromeUI(QWidget):
             "Name",
             "Profile",
             "Email",
-            "Total Channel",
+            "Amount",
             "Profile ID"
         ])
-        self.sort_field_dropdown.setCurrentText("Name")
+        self.sort_field_dropdown.setCurrentText("Profile")
         self.sort_field_dropdown.setFixedSize(120, 32)
         self.sort_field_dropdown.currentTextChanged.connect(self.sort_profiles_table)
         self.sort_field_dropdown.setStyleSheet("""
@@ -1563,6 +1566,8 @@ class SamplechromeUI(QWidget):
         
         # Sort order label
         sort_order_label = QLabel("Order:")
+        sort_order_label.setFixedSize(80, 32)
+        sort_order_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sort_order_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -1578,7 +1583,7 @@ class SamplechromeUI(QWidget):
             "Z-A"
         ])
         self.sort_order_dropdown.setCurrentText("A-Z")
-        self.sort_order_dropdown.setFixedSize(80, 32)
+        self.sort_order_dropdown.setFixedSize(120, 32)
         self.sort_order_dropdown.currentTextChanged.connect(self.sort_profiles_table)
         self.sort_order_dropdown.setStyleSheet("""
             QComboBox {
@@ -1612,7 +1617,9 @@ class SamplechromeUI(QWidget):
         """)
         
         # Channel type filter label
-        channel_filter_label = QLabel("Channel Type:")
+        channel_filter_label = QLabel("Channel:")
+        channel_filter_label.setFixedSize(80, 32)
+        channel_filter_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         channel_filter_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -1659,6 +1666,8 @@ class SamplechromeUI(QWidget):
         
         # Sub type filter label
         sub_type_filter_label = QLabel("Sub type:")
+        sub_type_filter_label.setFixedSize(80, 32)
+        sub_type_filter_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub_type_filter_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -1670,7 +1679,7 @@ class SamplechromeUI(QWidget):
         # Sub type filter dropdown
         self.sub_type_filter = QComboBox()
         self.sub_type_filter.addItem("All Sub types")
-        self.sub_type_filter.setFixedSize(140, 32)
+        self.sub_type_filter.setFixedSize(120, 32)
         self.sub_type_filter.currentTextChanged.connect(self.filter_profiles_table)
         self.sub_type_filter.setStyleSheet("""
             QComboBox {
@@ -1702,19 +1711,19 @@ class SamplechromeUI(QWidget):
                 selection-color: #ffffff;
             }
         """)
-        
+        search_row1 = QHBoxLayout()
+        search_row1.setSpacing(10)
         search_row1.addWidget(search_label)
-        search_row1.addWidget(self.search_input)
         search_row1.addWidget(self.search_scope)
+        search_row1.addWidget(self.search_input)
         search_row1.addStretch()
         
         # Second row - Channel Type and Sub Type filters
         search_row2 = QHBoxLayout()
         search_row2.setSpacing(10)
-        
         search_row2.addWidget(channel_filter_label)
         search_row2.addWidget(self.channel_type_filter)
-        search_row2.addSpacing(15)
+        search_row2.addSpacing(0)
         search_row2.addWidget(sub_type_filter_label)
         search_row2.addWidget(self.sub_type_filter)
         search_row2.addStretch()
@@ -1722,22 +1731,26 @@ class SamplechromeUI(QWidget):
         # Third row - Sort functionality
         search_row3 = QHBoxLayout()
         search_row3.setSpacing(10)
-        
         search_row3.addWidget(sort_field_label)
         search_row3.addWidget(self.sort_field_dropdown)
-        search_row3.addSpacing(5)
+        search_row3.addSpacing(0)
         search_row3.addWidget(sort_order_label)
         search_row3.addWidget(self.sort_order_dropdown)
         search_row3.addStretch()
         
         # Add all three rows to the main search layout
-        search_layout.addLayout(search_row1)
-        search_layout.addLayout(search_row2)
+        
         search_layout.addLayout(search_row3)
+        search_layout.addLayout(search_row2)
+        search_layout.addLayout(search_row1)
         
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
         self.profiles_table.setColumnCount(9)
+        
+        # Set size policy to allow table to expand with window
+        from PyQt6.QtWidgets import QSizePolicy
+        self.profiles_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Sign in", "Notes", "Amount", "Profile ID"])
         
         # Set custom delegate for styling deleted profiles
@@ -2165,6 +2178,9 @@ class SamplechromeUI(QWidget):
             # Special handling for Profile ID column to use natural sorting
             if sort_field == "Profile ID":
                 self.custom_sort_profile_id_column(reverse_order)
+            # Special handling for Amount column to use numerical sorting
+            elif sort_field == "Amount":
+                self.custom_sort_amount_column(reverse_order)
             else:
                 # Use default Qt sorting for other columns
                 self.profiles_table.sortItems(column_index, Qt.SortOrder.AscendingOrder if not reverse_order else Qt.SortOrder.DescendingOrder)
@@ -2182,6 +2198,43 @@ class SamplechromeUI(QWidget):
         
         # Sort using natural sorting key for Profile ID column (column 8)
         rows_data.sort(key=lambda row: natural_sort_key(row[8]), reverse=reverse_order)
+        
+        # Clear the table and repopulate with sorted data
+        self.profiles_table.setRowCount(0)
+        self.profiles_table.setRowCount(len(rows_data))
+        
+        for row, row_data in enumerate(rows_data):
+            for col, cell_data in enumerate(row_data):
+                item = QTableWidgetItem(cell_data)
+                # Apply center alignment for specific columns
+                if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.profiles_table.setItem(row, col, item)
+
+    def custom_sort_amount_column(self, reverse_order=False):
+        """Custom sort for Amount column using numerical sorting"""
+        # Get all rows data
+        rows_data = []
+        for row in range(self.profiles_table.rowCount()):
+            row_data = []
+            for col in range(self.profiles_table.columnCount()):
+                item = self.profiles_table.item(row, col)
+                row_data.append(item.text() if item else "")
+            rows_data.append(row_data)
+        
+        # Sort using numerical sorting key for Amount column (column 7)
+        def numerical_sort_key(row):
+            amount_text = row[7]  # Amount column
+            if not amount_text or amount_text.strip() == "":
+                return float('inf') if not reverse_order else float('-inf')  # Empty values sort to the end for ascending, beginning for descending
+            try:
+                # Try to convert to float for numerical sorting
+                return float(amount_text)
+            except ValueError:
+                # If not a number, sort as string (alphabetically)
+                return float('inf') if reverse_order else float('-inf')
+        
+        rows_data.sort(key=numerical_sort_key, reverse=reverse_order)
         
         # Clear the table and repopulate with sorted data
         self.profiles_table.setRowCount(0)
@@ -2281,6 +2334,12 @@ class SamplechromeUI(QWidget):
         """Override close event to save window position"""
         self.save_window_position()
         event.accept()
+    
+    def resizeEvent(self, event):
+        """Override resize event to adjust table height"""
+        super().resizeEvent(event)
+        # The table will automatically resize due to size policy
+        # You can add custom logic here if needed
 
     def launch_selected_profile(self):
         """Launch the selected Chrome profile"""
