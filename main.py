@@ -1584,21 +1584,6 @@ class SamplechromeUI(QWidget):
             }
         """)
         
-        search_row1.addWidget(search_label)
-        search_row1.addWidget(self.search_input)
-        search_row1.addWidget(self.search_scope)
-        search_row1.addSpacing(15)
-        search_row1.addWidget(sort_field_label)
-        search_row1.addWidget(self.sort_field_dropdown)
-        search_row1.addSpacing(5)
-        search_row1.addWidget(sort_order_label)
-        search_row1.addWidget(self.sort_order_dropdown)
-        search_row1.addStretch()
-        
-        # Second row - Channel type and Sub type filters
-        search_row2 = QHBoxLayout()
-        search_row2.setSpacing(10)
-        
         # Channel type filter label
         channel_filter_label = QLabel("Channel Type:")
         channel_filter_label.setStyleSheet("""
@@ -1693,11 +1678,26 @@ class SamplechromeUI(QWidget):
             }
         """)
         
-        search_row2.addWidget(channel_filter_label)
-        search_row2.addWidget(self.channel_type_filter)
-        search_row2.addSpacing(15)
-        search_row2.addWidget(sub_type_filter_label)
-        search_row2.addWidget(self.sub_type_filter)
+        search_row1.addWidget(search_label)
+        search_row1.addWidget(self.search_input)
+        search_row1.addWidget(self.search_scope)
+        search_row1.addSpacing(15)
+        search_row1.addWidget(channel_filter_label)
+        search_row1.addWidget(self.channel_type_filter)
+        search_row1.addSpacing(15)
+        search_row1.addWidget(sub_type_filter_label)
+        search_row1.addWidget(self.sub_type_filter)
+        search_row1.addStretch()
+        
+        # Second row - Sort functionality
+        search_row2 = QHBoxLayout()
+        search_row2.setSpacing(10)
+        
+        search_row2.addWidget(sort_field_label)
+        search_row2.addWidget(self.sort_field_dropdown)
+        search_row2.addSpacing(5)
+        search_row2.addWidget(sort_order_label)
+        search_row2.addWidget(self.sort_order_dropdown)
         search_row2.addStretch()
         
         # Add both rows to the main search layout
