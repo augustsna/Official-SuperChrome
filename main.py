@@ -1751,7 +1751,7 @@ class SamplechromeUI(QWidget):
         # Set size policy to allow table to expand with window
         from PyQt6.QtWidgets import QSizePolicy
         self.profiles_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Sign in", "Notes", "Amount", "Profile ID"])
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Email", "Notes", "Amount", "Profile ID"])
         
         # Set custom delegate for styling deleted profiles
         self.table_delegate = DeletedProfileDelegate(self.profiles_table)
@@ -2179,8 +2179,8 @@ class SamplechromeUI(QWidget):
             if sort_field == "Profile ID":
                 self.custom_sort_profile_id_column(reverse_order)
             else:
-                # Use default Qt sorting for other columns
-                self.profiles_table.sortItems(column_index, Qt.SortOrder.AscendingOrder if not reverse_order else Qt.SortOrder.DescendingOrder)
+                # Custom sorting to handle empty values last for all columns
+                self.custom_sort_column(column_index, reverse_order)
 
     def custom_sort_profile_id_column(self, reverse_order=False):
         """Custom sort for Profile ID column using natural sorting"""
@@ -2194,9 +2194,43 @@ class SamplechromeUI(QWidget):
             rows_data.append(row_data)
         
         # Sort using natural sorting key for Profile ID column (column 8)
-        rows_data.sort(key=lambda row: natural_sort_key(row[8]), reverse=reverse_order)
+        # Empty values will be sorted last
+        def sort_key_with_empty_last(row):
+            profile_id = row[8].strip()
+            if not profile_id:
+                return (1, "")  # Empty values get highest sort key
+            return (0, natural_sort_key(profile_id))  # Non-empty values get normal sort key
+        
+        rows_data.sort(key=sort_key_with_empty_last, reverse=reverse_order)
         
         # Clear the table and repopulate with sorted data
+        self._repopulate_table_with_sorted_data(rows_data)
+
+    def custom_sort_column(self, column_index, reverse_order=False):
+        """Custom sort for any column with empty values last"""
+        # Get all rows data
+        rows_data = []
+        for row in range(self.profiles_table.rowCount()):
+            row_data = []
+            for col in range(self.profiles_table.columnCount()):
+                item = self.profiles_table.item(row, col)
+                row_data.append(item.text() if item else "")
+            rows_data.append(row_data)
+        
+        # Sort with empty values last
+        def sort_key_with_empty_last(row):
+            cell_value = row[column_index].strip()
+            if not cell_value:
+                return (1, "")  # Empty values get highest sort key
+            return (0, cell_value.lower())  # Non-empty values get normal sort key
+        
+        rows_data.sort(key=sort_key_with_empty_last, reverse=reverse_order)
+        
+        # Clear the table and repopulate with sorted data
+        self._repopulate_table_with_sorted_data(rows_data)
+
+    def _repopulate_table_with_sorted_data(self, rows_data):
+        """Helper function to repopulate table with sorted data"""
         self.profiles_table.setRowCount(0)
         self.profiles_table.setRowCount(len(rows_data))
         
