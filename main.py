@@ -13,7 +13,7 @@ from PyQt6.QtCore import Qt, QSettings, QSize, QTimer
 from PyQt6.QtGui import QIcon, QPixmap, QColor
 
 # Sample configuration constants
-WINDOW_SIZE = (600, 500)
+WINDOW_SIZE = (760, 577)
 WINDOW_TITLE = "Sample chrome UI"
 ICON_PATH = "src/icon.png"
 PROJECT_ROOT = "."
@@ -1028,7 +1028,7 @@ class SamplechromeUI(QWidget):
                 'channel_types': ['user_custom', 'Chrome Profile', 'Standard', 'Premium', 'Basic'],
                 'app_settings': {
                     'window_title': 'Sample chrome UI',
-                    'window_size': [600, 500],
+                    'window_size': [760, 577],
                     'icon_path': 'src/icon.png'
                 }
             }
@@ -1313,7 +1313,7 @@ class SamplechromeUI(QWidget):
         window_size = app_settings.get('window_size', WINDOW_SIZE)
         
         self.setWindowTitle(window_title)
-        self.setMinimumSize(600, 500)
+        self.setMinimumSize(760, 577)
         self.resize(window_size[0], window_size[1])
         self.setStyleSheet(STYLE_SHEET)
         
