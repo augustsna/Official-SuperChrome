@@ -1447,7 +1447,7 @@ class SamplechromeUI(QWidget):
         
         # Search input field
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search profiles...")
+        self.search_input.setPlaceholderText("Search names...")
         self.search_input.setFixedSize(210, 32)
         self.search_input.textChanged.connect(self.filter_profiles_table)
         self.search_input.setStyleSheet("""
@@ -1514,7 +1514,7 @@ class SamplechromeUI(QWidget):
         """)
         
         # Sort field label
-        sort_field_label = QLabel("Sort Field:")
+        sort_field_label = QLabel("Sort by:")
         sort_field_label.setFixedSize(80, 32)
         sort_field_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sort_field_label.setStyleSheet("""
@@ -1719,28 +1719,29 @@ class SamplechromeUI(QWidget):
             }
         """)
         search_row1 = QHBoxLayout()
-        search_row1.setSpacing(10)
+        search_row1.addStretch()
         search_row1.addWidget(search_label)
         search_row1.addWidget(self.search_scope)
+        search_row1.addSpacing(20)
         search_row1.addWidget(self.search_input)
         search_row1.addStretch()
         
         # Second row - Channel Type and Sub Type filters
         search_row2 = QHBoxLayout()
-        search_row2.setSpacing(10)
+        search_row2.addStretch()
         search_row2.addWidget(channel_filter_label)
         search_row2.addWidget(self.channel_type_filter)
-        search_row2.addSpacing(0)
+        search_row2.addSpacing(20)
         search_row2.addWidget(sub_type_filter_label)
         search_row2.addWidget(self.sub_type_filter)
         search_row2.addStretch()
         
         # Third row - Sort functionality
         search_row3 = QHBoxLayout()
-        search_row3.setSpacing(10)
+        search_row3.addStretch()
         search_row3.addWidget(sort_field_label)
         search_row3.addWidget(self.sort_field_dropdown)
-        search_row3.addSpacing(0)
+        search_row3.addSpacing(20)
         search_row3.addWidget(sort_order_label)
         search_row3.addWidget(self.sort_order_dropdown)
         search_row3.addStretch()
