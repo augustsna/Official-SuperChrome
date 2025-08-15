@@ -614,7 +614,7 @@ class EditProfileDialog(QDialog):
             if 'user_custom' in self.channel_type_buttons:
                 self.channel_type_buttons['user_custom'].setChecked(True)
         
-        form_layout.addRow("Channel Types:", self.channel_types_container)
+        form_layout.addRow("Channel type:", self.channel_types_container)
         
         # Sub Types field (toggle buttons like channel types)
         # Create a container for sub type buttons
@@ -745,7 +745,7 @@ class EditProfileDialog(QDialog):
             if sub_type in self.sub_type_buttons:
                 self.sub_type_buttons[sub_type].setChecked(True)
         
-        form_layout.addRow("Sub Types:", self.sub_types_container)
+        form_layout.addRow("Sub type:", self.sub_types_container)
         
         # Profile ID field (read-only for Chrome profiles)
         self.profile_id_edit = QLineEdit()
@@ -791,7 +791,7 @@ class EditProfileDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Total Channel:", self.total_channel_edit)
+        form_layout.addRow("Amount:", self.total_channel_edit)
         
         # Notes field
         self.notes_edit = QLineEdit()
@@ -1457,15 +1457,15 @@ class SamplechromeUI(QWidget):
         self.search_scope = QComboBox()
         self.search_scope.addItems([
             "All Fields",
-            "Name Only",
-            "Profile Only", 
-            "Email Only",
-            "Notes Only",
-            "Total Channel Only",
-            "Profile ID Only"
+            "Name",
+            "Profile", 
+            "Email",
+            "Notes",
+            "Amount",
+            "Profile ID"
         ])
         self.search_scope.setCurrentText("All Fields")
-        self.search_scope.setFixedSize(120, 32)
+        self.search_scope.setFixedSize(100, 32)
         self.search_scope.currentTextChanged.connect(self.filter_profiles_table)
         self.search_scope.setStyleSheet("""
             QComboBox {
@@ -1482,13 +1482,12 @@ class SamplechromeUI(QWidget):
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 0px;
             }
             QComboBox::down-arrow {
-                image: url(down_arrow.svg);
-                width: 16px;
-                height: 16px;
-                margin-right: 5px;
+                image: none;
+                border: none;
+                width: 0px;
             }
             QComboBox QAbstractItemView {
                 border: 1px solid #cccccc;
@@ -1536,13 +1535,12 @@ class SamplechromeUI(QWidget):
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 0px;
             }
             QComboBox::down-arrow {
-                image: url(down_arrow.svg);
-                width: 16px;
-                height: 16px;
-                margin-right: 5px;
+                image: none;
+                border: none;
+                width: 0px;
             }
             QComboBox QAbstractItemView {
                 border: 1px solid #cccccc;
@@ -1587,13 +1585,12 @@ class SamplechromeUI(QWidget):
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 0px;
             }
             QComboBox::down-arrow {
-                image: url(down_arrow.svg);
-                width: 16px;
-                height: 16px;
-                margin-right: 5px;
+                image: none;
+                border: none;
+                width: 0px;
             }
             QComboBox QAbstractItemView {
                 border: 1px solid #cccccc;
@@ -1616,8 +1613,8 @@ class SamplechromeUI(QWidget):
         
         # Channel type filter dropdown
         self.channel_type_filter = QComboBox()
-        self.channel_type_filter.addItem("All Channel Types")
-        self.channel_type_filter.setFixedSize(140, 32)
+        self.channel_type_filter.addItem("All types")
+        self.channel_type_filter.setFixedSize(120, 32)
         self.channel_type_filter.currentTextChanged.connect(self.filter_profiles_table)
         self.channel_type_filter.setStyleSheet("""
             QComboBox {
@@ -1634,13 +1631,12 @@ class SamplechromeUI(QWidget):
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 0px;
             }
             QComboBox::down-arrow {
-                image: url(down_arrow.svg);
-                width: 16px;
-                height: 16px;
-                margin-right: 5px;
+                image: none;
+                border: none;
+                width: 0px;
             }
             QComboBox QAbstractItemView {
                 border: 1px solid #cccccc;
@@ -1652,7 +1648,7 @@ class SamplechromeUI(QWidget):
         """)
         
         # Sub type filter label
-        sub_type_filter_label = QLabel("Sub Type:")
+        sub_type_filter_label = QLabel("Sub type:")
         sub_type_filter_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -1663,7 +1659,7 @@ class SamplechromeUI(QWidget):
         
         # Sub type filter dropdown
         self.sub_type_filter = QComboBox()
-        self.sub_type_filter.addItem("All Sub Types")
+        self.sub_type_filter.addItem("All Sub types")
         self.sub_type_filter.setFixedSize(140, 32)
         self.sub_type_filter.currentTextChanged.connect(self.filter_profiles_table)
         self.sub_type_filter.setStyleSheet("""
@@ -1681,13 +1677,12 @@ class SamplechromeUI(QWidget):
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 0px;
             }
             QComboBox::down-arrow {
-                image: url(down_arrow.svg);
-                width: 16px;
-                height: 16px;
-                margin-right: 5px;
+                image: none;
+                border: none;
+                width: 0px;
             }
             QComboBox QAbstractItemView {
                 border: 1px solid #cccccc;
@@ -1701,33 +1696,39 @@ class SamplechromeUI(QWidget):
         search_row1.addWidget(search_label)
         search_row1.addWidget(self.search_input)
         search_row1.addWidget(self.search_scope)
-        search_row1.addSpacing(15)
-        search_row1.addWidget(channel_filter_label)
-        search_row1.addWidget(self.channel_type_filter)
-        search_row1.addSpacing(15)
-        search_row1.addWidget(sub_type_filter_label)
-        search_row1.addWidget(self.sub_type_filter)
         search_row1.addStretch()
         
-        # Second row - Sort functionality
+        # Second row - Channel Type and Sub Type filters
         search_row2 = QHBoxLayout()
         search_row2.setSpacing(10)
         
-        search_row2.addWidget(sort_field_label)
-        search_row2.addWidget(self.sort_field_dropdown)
-        search_row2.addSpacing(5)
-        search_row2.addWidget(sort_order_label)
-        search_row2.addWidget(self.sort_order_dropdown)
+        search_row2.addWidget(channel_filter_label)
+        search_row2.addWidget(self.channel_type_filter)
+        search_row2.addSpacing(15)
+        search_row2.addWidget(sub_type_filter_label)
+        search_row2.addWidget(self.sub_type_filter)
         search_row2.addStretch()
         
-        # Add both rows to the main search layout
+        # Third row - Sort functionality
+        search_row3 = QHBoxLayout()
+        search_row3.setSpacing(10)
+        
+        search_row3.addWidget(sort_field_label)
+        search_row3.addWidget(self.sort_field_dropdown)
+        search_row3.addSpacing(5)
+        search_row3.addWidget(sort_order_label)
+        search_row3.addWidget(self.sort_order_dropdown)
+        search_row3.addStretch()
+        
+        # Add all three rows to the main search layout
         search_layout.addLayout(search_row1)
         search_layout.addLayout(search_row2)
+        search_layout.addLayout(search_row3)
         
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
         self.profiles_table.setColumnCount(9)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Types", "Sub Type", "Amount", "Profile ID", "Sign in", "Notes"])
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Amount", "Profile ID", "Sign in", "Notes"])
         
         # Set custom delegate for styling deleted profiles
         self.table_delegate = DeletedProfileDelegate(self.profiles_table)
@@ -1772,7 +1773,7 @@ class SamplechromeUI(QWidget):
                 border-radius: 0px;
                 gridline-color: #f0f0f0;
                 outline: none;
-                selection-background-color: rgba(173, 216, 230, 1);
+                selection-background-color: rgba(100, 181, 246, 0.15);
                 selection-color: #333333;
                 gridline-color: #e0e0e0;
             }
@@ -1785,9 +1786,9 @@ class SamplechromeUI(QWidget):
                 background-color: #f8f9fa;
             }
             QTableWidget::item:selected {
-                background-color: rgba(173, 216, 230, 1);
+                background-color: rgba(100, 181, 246, 0.15);
                 color: #333333;
-                border-bottom: 2px solid rgba(173, 216, 230, 1);
+                border-bottom: 1px solid rgba(100, 181, 246, 0.15);
             }
             QHeaderView::section {
                 background-color: #f8f9fa;
@@ -1821,7 +1822,7 @@ class SamplechromeUI(QWidget):
                 font-size: 12px;
             }
             QTableWidget::item[column="0"]:selected {
-                background-color: rgba(173, 216, 230, 1);
+                background-color: rgba(100, 181, 246, 0.15);
                 color: #333333;
             }
         """)
@@ -2039,14 +2040,14 @@ class SamplechromeUI(QWidget):
         # Update the dropdown
         current_selection = self.channel_type_filter.currentText()
         self.channel_type_filter.clear()
-        self.channel_type_filter.addItem("All Channel Types")
+        self.channel_type_filter.addItem("All types")
         self.channel_type_filter.addItems(channel_types)
         
         # Restore previous selection if it still exists
         if current_selection in [self.channel_type_filter.itemText(i) for i in range(self.channel_type_filter.count())]:
             self.channel_type_filter.setCurrentText(current_selection)
         else:
-            self.channel_type_filter.setCurrentText("All Channel Types")
+            self.channel_type_filter.setCurrentText("All types")
 
     def update_sub_type_filter_options(self):
         """Update the sub type filter dropdown with options from config.json"""
@@ -2056,14 +2057,14 @@ class SamplechromeUI(QWidget):
         # Update the dropdown
         current_selection = self.sub_type_filter.currentText()
         self.sub_type_filter.clear()
-        self.sub_type_filter.addItem("All Sub Types")
+        self.sub_type_filter.addItem("All Sub types")
         self.sub_type_filter.addItems(sub_types)
         
         # Restore previous selection if it still exists
         if current_selection in [self.sub_type_filter.itemText(i) for i in range(self.sub_type_filter.count())]:
             self.sub_type_filter.setCurrentText(current_selection)
         else:
-            self.sub_type_filter.setCurrentText("All Sub Types")
+            self.sub_type_filter.setCurrentText("All Sub types")
 
     def filter_profiles_table(self):
         """Filter the profiles table based on search text, scope, channel type, and sub type"""
@@ -2075,7 +2076,7 @@ class SamplechromeUI(QWidget):
         # If all filters are empty, show all profiles
         if (not search_text and 
             channel_type_filter == "All Channel Types" and 
-            sub_type_filter == "All Sub Types"):
+            sub_type_filter == "All Sub types"):
             for row in range(self.profiles_table.rowCount()):
                 self.profiles_table.setRowHidden(row, False)
             return
@@ -2094,12 +2095,12 @@ class SamplechromeUI(QWidget):
             
             # Check channel type filter
             channel_matches = True
-            if channel_type_filter != "All Channel Types":
+            if channel_type_filter != "All types":
                 channel_matches = channel_type_filter.lower() in channel_types
             
             # Check sub type filter
             sub_type_matches = True
-            if sub_type_filter != "All Sub Types":
+            if sub_type_filter != "All Sub types":
                 sub_type_matches = sub_type_filter.lower() in sub_types
             
             # Check if search text matches based on selected scope
@@ -2113,17 +2114,17 @@ class SamplechromeUI(QWidget):
                                 search_text in notes or
                                 search_text in total_channel or
                                 search_text in profile_id)
-            elif search_scope == "Name Only":
+            elif search_scope == "Name":
                 search_matches = search_text in name
-            elif search_scope == "Profile Only":
+            elif search_scope == "Profile":
                 search_matches = search_text in profile
-            elif search_scope == "Email Only":
+            elif search_scope == "Email":
                 search_matches = search_text in email
-            elif search_scope == "Notes Only":
+            elif search_scope == "Notes":
                 search_matches = search_text in notes
-            elif search_scope == "Total Channel Only":
+            elif search_scope == "Amount":
                 search_matches = search_text in total_channel
-            elif search_scope == "Profile ID Only":
+            elif search_scope == "Profile ID":
                 search_matches = search_text in profile_id
             
             # Show/hide row based on all filters
@@ -2142,7 +2143,7 @@ class SamplechromeUI(QWidget):
             column_index = 2
         elif sort_field == "Email":
             column_index = 7
-        elif sort_field == "Total Channel":
+        elif sort_field == "Amount":
             column_index = 5
         elif sort_field == "Profile ID":
             column_index = 6
