@@ -1392,6 +1392,318 @@ class SamplechromeUI(QWidget):
 
     def create_profiles_section(self, layout):
         """Create the profiles display section"""
+        # Create search box with two rows
+        search_layout = QVBoxLayout()
+        search_layout.setSpacing(8)
+        
+        # First row - Search functionality
+        search_row1 = QHBoxLayout()
+        search_row1.setSpacing(10)
+        
+        # Search label
+        search_label = QLabel("Search:")
+        search_label.setStyleSheet("""
+            QLabel {
+                color: #333333;
+                font-weight: 500;
+                font-size: 13px;
+            }
+        """)
+        
+        # Search input field
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search profiles...")
+        self.search_input.setFixedSize(180, 32)
+        self.search_input.textChanged.connect(self.filter_profiles_table)
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+                background-color: #ffffff;
+                color: #333333;
+            }
+            QLineEdit:focus {
+                border: 2px solid #47a4ff;
+                outline: none;
+            }
+            QLineEdit::placeholder {
+                color: #999999;
+            }
+        """)
+        
+        # Search scope dropdown
+        self.search_scope = QComboBox()
+        self.search_scope.addItems([
+            "All Fields",
+            "Name Only",
+            "Profile Only", 
+            "Email Only",
+            "Notes Only",
+            "Total Channel Only",
+            "Profile ID Only"
+        ])
+        self.search_scope.setCurrentText("All Fields")
+        self.search_scope.setFixedSize(120, 32)
+        self.search_scope.currentTextChanged.connect(self.filter_profiles_table)
+        self.search_scope.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+                background-color: #ffffff;
+                color: #333333;
+            }
+            QComboBox:focus {
+                border: 1px solid #cccccc;
+                outline: none;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: url(down_arrow.svg);
+                width: 16px;
+                height: 16px;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                border: 1px solid #cccccc;
+                border-radius: 0px;
+                background-color: #ffffff;
+                selection-background-color: #47a4ff;
+                selection-color: #ffffff;
+            }
+        """)
+        
+        # Sort field label
+        sort_field_label = QLabel("Sort Field:")
+        sort_field_label.setStyleSheet("""
+            QLabel {
+                color: #333333;
+                font-weight: 500;
+                font-size: 13px;
+            }
+        """)
+        
+        # Sort field dropdown
+        self.sort_field_dropdown = QComboBox()
+        self.sort_field_dropdown.addItems([
+            "Name",
+            "Profile",
+            "Email",
+            "Total Channel",
+            "Profile ID"
+        ])
+        self.sort_field_dropdown.setCurrentText("Name")
+        self.sort_field_dropdown.setFixedSize(120, 32)
+        self.sort_field_dropdown.currentTextChanged.connect(self.sort_profiles_table)
+        self.sort_field_dropdown.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+                background-color: #ffffff;
+                color: #333333;
+            }
+            QComboBox:focus {
+                border: 1px solid #cccccc;
+                outline: none;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: url(down_arrow.svg);
+                width: 16px;
+                height: 16px;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                border: 1px solid #cccccc;
+                border-radius: 0px;
+                background-color: #ffffff;
+                selection-background-color: #47a4ff;
+                selection-color: #ffffff;
+            }
+        """)
+        
+        # Sort order label
+        sort_order_label = QLabel("Order:")
+        sort_order_label.setStyleSheet("""
+            QLabel {
+                color: #333333;
+                font-weight: 500;
+                font-size: 13px;
+            }
+        """)
+        
+        # Sort order dropdown
+        self.sort_order_dropdown = QComboBox()
+        self.sort_order_dropdown.addItems([
+            "A-Z",
+            "Z-A"
+        ])
+        self.sort_order_dropdown.setCurrentText("A-Z")
+        self.sort_order_dropdown.setFixedSize(80, 32)
+        self.sort_order_dropdown.currentTextChanged.connect(self.sort_profiles_table)
+        self.sort_order_dropdown.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+                background-color: #ffffff;
+                color: #333333;
+            }
+            QComboBox:focus {
+                border: 1px solid #cccccc;
+                outline: none;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: url(down_arrow.svg);
+                width: 16px;
+                height: 16px;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                border: 1px solid #cccccc;
+                border-radius: 0px;
+                background-color: #ffffff;
+                selection-background-color: #47a4ff;
+                selection-color: #ffffff;
+            }
+        """)
+        
+        search_row1.addWidget(search_label)
+        search_row1.addWidget(self.search_input)
+        search_row1.addWidget(self.search_scope)
+        search_row1.addSpacing(15)
+        search_row1.addWidget(sort_field_label)
+        search_row1.addWidget(self.sort_field_dropdown)
+        search_row1.addSpacing(5)
+        search_row1.addWidget(sort_order_label)
+        search_row1.addWidget(self.sort_order_dropdown)
+        search_row1.addStretch()
+        
+        # Second row - Channel type and Sub type filters
+        search_row2 = QHBoxLayout()
+        search_row2.setSpacing(10)
+        
+        # Channel type filter label
+        channel_filter_label = QLabel("Channel Type:")
+        channel_filter_label.setStyleSheet("""
+            QLabel {
+                color: #333333;
+                font-weight: 500;
+                font-size: 13px;
+            }
+        """)
+        
+        # Channel type filter dropdown
+        self.channel_type_filter = QComboBox()
+        self.channel_type_filter.addItem("All Channel Types")
+        self.channel_type_filter.setFixedSize(140, 32)
+        self.channel_type_filter.currentTextChanged.connect(self.filter_profiles_table)
+        self.channel_type_filter.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+                background-color: #ffffff;
+                color: #333333;
+            }
+            QComboBox:focus {
+                border: 1px solid #cccccc;
+                outline: none;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: url(down_arrow.svg);
+                width: 16px;
+                height: 16px;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                border: 1px solid #cccccc;
+                border-radius: 0px;
+                background-color: #ffffff;
+                selection-background-color: #47a4ff;
+                selection-color: #ffffff;
+            }
+        """)
+        
+        # Sub type filter label
+        sub_type_filter_label = QLabel("Sub Type:")
+        sub_type_filter_label.setStyleSheet("""
+            QLabel {
+                color: #333333;
+                font-weight: 500;
+                font-size: 13px;
+            }
+        """)
+        
+        # Sub type filter dropdown
+        self.sub_type_filter = QComboBox()
+        self.sub_type_filter.addItem("All Sub Types")
+        self.sub_type_filter.setFixedSize(140, 32)
+        self.sub_type_filter.currentTextChanged.connect(self.filter_profiles_table)
+        self.sub_type_filter.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+                background-color: #ffffff;
+                color: #333333;
+            }
+            QComboBox:focus {
+                border: 1px solid #cccccc;
+                outline: none;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: url(down_arrow.svg);
+                width: 16px;
+                height: 16px;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                border: 1px solid #cccccc;
+                border-radius: 0px;
+                background-color: #ffffff;
+                selection-background-color: #47a4ff;
+                selection-color: #ffffff;
+            }
+        """)
+        
+        search_row2.addWidget(channel_filter_label)
+        search_row2.addWidget(self.channel_type_filter)
+        search_row2.addSpacing(15)
+        search_row2.addWidget(sub_type_filter_label)
+        search_row2.addWidget(self.sub_type_filter)
+        search_row2.addStretch()
+        
+        # Add both rows to the main search layout
+        search_layout.addLayout(search_row1)
+        search_layout.addLayout(search_row2)
+        
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
         self.profiles_table.setColumnCount(9)
@@ -1440,8 +1752,8 @@ class SamplechromeUI(QWidget):
                 border-radius: 0px;
                 gridline-color: #f0f0f0;
                 outline: none;
-                selection-background-color: #4a90e2;
-                selection-color: white;
+                selection-background-color: rgba(173, 216, 230, 1);
+                selection-color: #333333;
                 gridline-color: #e0e0e0;
             }
             QTableWidget::item {
@@ -1453,9 +1765,9 @@ class SamplechromeUI(QWidget):
                 background-color: #f8f9fa;
             }
             QTableWidget::item:selected {
-                background-color: #4a90e2;
-                color: white;
-                border-bottom: 1px solid #4a90e2;
+                background-color: rgba(173, 216, 230, 1);
+                color: #333333;
+                border-bottom: 2px solid rgba(173, 216, 230, 1);
             }
             QHeaderView::section {
                 background-color: #f8f9fa;
@@ -1489,8 +1801,8 @@ class SamplechromeUI(QWidget):
                 font-size: 12px;
             }
             QTableWidget::item[column="0"]:selected {
-                background-color: #4a90e2;
-                color: white;
+                background-color: rgba(173, 216, 230, 1);
+                color: #333333;
             }
         """)
         
@@ -1608,6 +1920,9 @@ class SamplechromeUI(QWidget):
         buttons_layout.addStretch()
         buttons_layout.addWidget(launch_btn)
   
+        # Add search layout and table to main layout
+        layout.addLayout(search_layout)
+        layout.addSpacing(8)  # Add space between search and table
         layout.addWidget(self.profiles_table)
         layout.addSpacing(1)
         layout.addLayout(buttons_layout)
@@ -1691,6 +2006,132 @@ class SamplechromeUI(QWidget):
         
         # Force the table to update its styling
         self.profiles_table.viewport().update()
+        
+        # Update filter options
+        self.update_channel_type_filter_options()
+        self.update_sub_type_filter_options()
+
+    def update_channel_type_filter_options(self):
+        """Update the channel type filter dropdown with options from config.json"""
+        # Get channel types from config.json
+        channel_types = self.config.get('channel_types', [])
+        
+        # Update the dropdown
+        current_selection = self.channel_type_filter.currentText()
+        self.channel_type_filter.clear()
+        self.channel_type_filter.addItem("All Channel Types")
+        self.channel_type_filter.addItems(channel_types)
+        
+        # Restore previous selection if it still exists
+        if current_selection in [self.channel_type_filter.itemText(i) for i in range(self.channel_type_filter.count())]:
+            self.channel_type_filter.setCurrentText(current_selection)
+        else:
+            self.channel_type_filter.setCurrentText("All Channel Types")
+
+    def update_sub_type_filter_options(self):
+        """Update the sub type filter dropdown with options from config.json"""
+        # Get sub types from config.json
+        sub_types = self.config.get('sub_types', [])
+        
+        # Update the dropdown
+        current_selection = self.sub_type_filter.currentText()
+        self.sub_type_filter.clear()
+        self.sub_type_filter.addItem("All Sub Types")
+        self.sub_type_filter.addItems(sub_types)
+        
+        # Restore previous selection if it still exists
+        if current_selection in [self.sub_type_filter.itemText(i) for i in range(self.sub_type_filter.count())]:
+            self.sub_type_filter.setCurrentText(current_selection)
+        else:
+            self.sub_type_filter.setCurrentText("All Sub Types")
+
+    def filter_profiles_table(self):
+        """Filter the profiles table based on search text, scope, channel type, and sub type"""
+        search_text = self.search_input.text().lower().strip()
+        search_scope = self.search_scope.currentText()
+        channel_type_filter = self.channel_type_filter.currentText()
+        sub_type_filter = self.sub_type_filter.currentText()
+        
+        # If all filters are empty, show all profiles
+        if (not search_text and 
+            channel_type_filter == "All Channel Types" and 
+            sub_type_filter == "All Sub Types"):
+            for row in range(self.profiles_table.rowCount()):
+                self.profiles_table.setRowHidden(row, False)
+            return
+        
+        # Filter profiles based on search text, scope, channel type, and sub type
+        for row in range(self.profiles_table.rowCount()):
+            # Get text from searchable columns
+            name = self.profiles_table.item(row, 1).text().lower() if self.profiles_table.item(row, 1) else ""
+            profile = self.profiles_table.item(row, 2).text().lower() if self.profiles_table.item(row, 2) else ""
+            email = self.profiles_table.item(row, 7).text().lower() if self.profiles_table.item(row, 7) else ""
+            notes = self.profiles_table.item(row, 8).text().lower() if self.profiles_table.item(row, 8) else ""
+            total_channel = self.profiles_table.item(row, 5).text().lower() if self.profiles_table.item(row, 5) else ""
+            profile_id = self.profiles_table.item(row, 6).text().lower() if self.profiles_table.item(row, 6) else ""
+            channel_types = self.profiles_table.item(row, 3).text().lower() if self.profiles_table.item(row, 3) else ""
+            sub_types = self.profiles_table.item(row, 4).text().lower() if self.profiles_table.item(row, 4) else ""
+            
+            # Check channel type filter
+            channel_matches = True
+            if channel_type_filter != "All Channel Types":
+                channel_matches = channel_type_filter.lower() in channel_types
+            
+            # Check sub type filter
+            sub_type_matches = True
+            if sub_type_filter != "All Sub Types":
+                sub_type_matches = sub_type_filter.lower() in sub_types
+            
+            # Check if search text matches based on selected scope
+            search_matches = False
+            if not search_text:
+                search_matches = True
+            elif search_scope == "All Fields":
+                search_matches = (search_text in name or 
+                                search_text in profile or 
+                                search_text in email or 
+                                search_text in notes or
+                                search_text in total_channel or
+                                search_text in profile_id)
+            elif search_scope == "Name Only":
+                search_matches = search_text in name
+            elif search_scope == "Profile Only":
+                search_matches = search_text in profile
+            elif search_scope == "Email Only":
+                search_matches = search_text in email
+            elif search_scope == "Notes Only":
+                search_matches = search_text in notes
+            elif search_scope == "Total Channel Only":
+                search_matches = search_text in total_channel
+            elif search_scope == "Profile ID Only":
+                search_matches = search_text in profile_id
+            
+            # Show/hide row based on all filters
+            self.profiles_table.setRowHidden(row, not (channel_matches and sub_type_matches and search_matches))
+
+    def sort_profiles_table(self):
+        """Sort the profiles table based on selected field and order"""
+        sort_field = self.sort_field_dropdown.currentText()
+        sort_order = self.sort_order_dropdown.currentText()
+        
+        # Get the column index based on the selected field
+        column_index = None
+        if sort_field == "Name":
+            column_index = 1
+        elif sort_field == "Profile":
+            column_index = 2
+        elif sort_field == "Email":
+            column_index = 7
+        elif sort_field == "Total Channel":
+            column_index = 5
+        elif sort_field == "Profile ID":
+            column_index = 6
+        
+        if column_index is not None:
+            # Determine sort order (A-Z = ascending, Z-A = descending)
+            reverse_order = (sort_order == "Z-A")
+            # Sort the table by the specified column
+            self.profiles_table.sortItems(column_index, Qt.SortOrder.AscendingOrder if not reverse_order else Qt.SortOrder.DescendingOrder)
 
     def refresh_profiles(self):
         """Refresh the profiles table with updated data from profile.json"""
