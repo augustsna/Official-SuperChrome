@@ -1727,7 +1727,7 @@ class SamplechromeUI(QWidget):
         # Create table widget for profiles
         self.profiles_table = QTableWidget()
         self.profiles_table.setColumnCount(9)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Types", "Sub Type", "Total Channel", "Profile ID", "Sign in", "Notes"])
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel Types", "Sub Type", "Amount", "Profile ID", "Sign in", "Notes"])
         
         # Set custom delegate for styling deleted profiles
         self.table_delegate = DeletedProfileDelegate(self.profiles_table)
@@ -1755,8 +1755,8 @@ class SamplechromeUI(QWidget):
         # Set header properties
         header = self.profiles_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # Number
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Name
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # Profile
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  # Name
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Profile
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Channel Type
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Sub Type
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Total Channel
