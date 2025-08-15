@@ -775,21 +775,6 @@ class EditProfileDialog(QDialog):
         
         form_layout.addRow("Sub type:", self.sub_types_container)
         
-        # Total Channel field
-        self.total_channel_edit = QLineEdit()
-        self.total_channel_edit.setText(self.profile_data.get('total_channel', ''))
-        self.total_channel_edit.setPlaceholderText("Enter total number of channels")
-        self.total_channel_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 4px 4px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                font-size: 14px;
-                background-color: white;
-            }
-        """)
-        form_layout.addRow("Amount:", self.total_channel_edit)
-        
         # Notes field
         self.notes_edit = QLineEdit()
         self.notes_edit.setText(self.profile_data.get('notes', ''))
@@ -804,6 +789,24 @@ class EditProfileDialog(QDialog):
             }
         """)
         form_layout.addRow("Notes:", self.notes_edit)
+        
+        # Total Channel field
+        self.total_channel_edit = QLineEdit()
+        self.total_channel_edit.setText(self.profile_data.get('total_channel', ''))
+        self.total_channel_edit.setPlaceholderText("Enter total number of channels")
+        # Add number-only validation
+        from PyQt6.QtGui import QIntValidator
+        self.total_channel_edit.setValidator(QIntValidator(0, 999999))  # Allow 0 to 999999
+        self.total_channel_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Amount:", self.total_channel_edit)
         
         # Name field
         self.name_edit = QLineEdit()
@@ -1755,7 +1758,7 @@ class SamplechromeUI(QWidget):
         # Set size policy to allow table to expand with window
         from PyQt6.QtWidgets import QSizePolicy
         self.profiles_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Email", "Notes", "Amount", "Profile ID"])
+        self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Email", "Amount", "Notes", "Profile ID"])
         
         # Enable header clicking for sorting
         self.profiles_table.horizontalHeader().sectionClicked.connect(self.on_header_clicked)
@@ -1791,8 +1794,8 @@ class SamplechromeUI(QWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Channel Type
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Sub Type
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)  # Email
-        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)  # Notes
-        header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Amount
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Amount
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)  # Notes
         header.setSectionResizeMode(8, QHeaderView.ResizeMode.ResizeToContents)  # Profile ID
         
         # Set table style
@@ -1979,7 +1982,7 @@ class SamplechromeUI(QWidget):
         layout.addLayout(buttons_layout)
         layout.addSpacing(4)  # Add space between table and buttons
 
-    def populate_profiles_table(self):
+    def populate_profiles_table(self, skip_validation=False):
         """Populate the profiles table with data from profile.json"""
         self.profiles_table.setRowCount(len(self.profiles))
         
@@ -1989,8 +1992,8 @@ class SamplechromeUI(QWidget):
         deleted_rows = set()
         
         for row, profile in enumerate(self.profiles):
-            # Check if profile exists
-            profile_exists = self.validate_profile_exists(profile.get('profile_id', ''))
+            # Check if profile exists (skip validation for faster refresh)
+            profile_exists = True if skip_validation else self.validate_profile_exists(profile.get('profile_id', ''))
             
             # Number
             number_item = QTableWidgetItem(str(row + 1))
@@ -2033,16 +2036,16 @@ class SamplechromeUI(QWidget):
             email_item = QTableWidgetItem(email)
             self.profiles_table.setItem(row, 5, email_item)
             
-            # Notes
-            notes = profile.get('notes', '')
-            notes_item = QTableWidgetItem(notes)
-            self.profiles_table.setItem(row, 6, notes_item)
-            
             # Total Channel
             total_channel = profile.get('total_channel', '')
             total_channel_item = QTableWidgetItem(total_channel)
             total_channel_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 7, total_channel_item)
+            self.profiles_table.setItem(row, 6, total_channel_item)
+            
+            # Notes
+            notes = profile.get('notes', '')
+            notes_item = QTableWidgetItem(notes)
+            self.profiles_table.setItem(row, 7, notes_item)
             
             # Profile ID
             profile_id = profile.get('profile_id', '')
@@ -2124,8 +2127,8 @@ class SamplechromeUI(QWidget):
             name = self.profiles_table.item(row, 1).text().lower() if self.profiles_table.item(row, 1) else ""
             profile = self.profiles_table.item(row, 2).text().lower() if self.profiles_table.item(row, 2) else ""
             email = self.profiles_table.item(row, 5).text().lower() if self.profiles_table.item(row, 5) else ""
-            notes = self.profiles_table.item(row, 6).text().lower() if self.profiles_table.item(row, 6) else ""
-            total_channel = self.profiles_table.item(row, 7).text().lower() if self.profiles_table.item(row, 7) else ""
+            total_channel = self.profiles_table.item(row, 6).text().lower() if self.profiles_table.item(row, 6) else ""
+            notes = self.profiles_table.item(row, 7).text().lower() if self.profiles_table.item(row, 7) else ""
             profile_id = self.profiles_table.item(row, 8).text().lower() if self.profiles_table.item(row, 8) else ""
             channel_types = self.profiles_table.item(row, 3).text().lower() if self.profiles_table.item(row, 3) else ""
             sub_types = self.profiles_table.item(row, 4).text().lower() if self.profiles_table.item(row, 4) else ""
@@ -2184,9 +2187,9 @@ class SamplechromeUI(QWidget):
             column_index = 4
         elif sort_field == "Email":
             column_index = 5
-        elif sort_field == "Notes":
-            column_index = 6
         elif sort_field == "Amount":
+            column_index = 6
+        elif sort_field == "Notes":
             column_index = 7
         elif sort_field == "Profile ID":
             column_index = 8
@@ -2317,7 +2320,7 @@ class SamplechromeUI(QWidget):
     def refresh_profiles(self):
         """Refresh the profiles table with updated data from profile.json"""
         self.profiles = self.load_profiles()
-        self.populate_profiles_table()
+        self.populate_profiles_table(skip_validation=True)
         
         # Create custom dialog with auto-close for refresh success
         dialog = CustomMessageBox(self, "Refresh Complete", "Loading from Updated JSON file ", "success")
@@ -2338,13 +2341,13 @@ class SamplechromeUI(QWidget):
                                      "No Chrome profiles found. Make sure Chrome is installed and has been used at least once.")
             return
         
-        # Check for duplicates (check both name and profile_id)
-        existing_profiles = {(profile.get('name', ''), profile.get('profile_id', '')) for profile in self.profiles}
+        # Check for duplicates (check only profile_id)
+        existing_profile_ids = {profile.get('profile_id', '') for profile in self.profiles}
         new_profiles = []
         
         for chrome_profile in chrome_profiles:
-            profile_key = (chrome_profile['name'], chrome_profile['profile_id'])
-            if profile_key not in existing_profiles:
+            profile_id = chrome_profile.get('profile_id', '')
+            if profile_id not in existing_profile_ids:
                 new_profiles.append(chrome_profile)
         
         if not new_profiles:
@@ -2360,7 +2363,7 @@ class SamplechromeUI(QWidget):
         
         # Save to file
         if self.save_profiles(self.profiles):
-            self.populate_profiles_table()
+            self.populate_profiles_table(skip_validation=True)
             # Show different messages based on number of profiles
             if len(new_profiles) > 5:
                 CustomMessageBox.show_success(self, "Success", 
@@ -2504,6 +2507,9 @@ class SamplechromeUI(QWidget):
             # Get edited data
             edited_data = dialog.get_profile_data()
             
+            # Store the profile ID to find it after resorting
+            profile_id_to_find = selected_profile.get('profile_id', '')
+            
             # Update the profile
             self.profiles[original_index].update(edited_data)
             
@@ -2512,7 +2518,16 @@ class SamplechromeUI(QWidget):
             
             # Save to file
             if self.save_profiles(self.profiles):
-                self.populate_profiles_table()
+                self.populate_profiles_table(skip_validation=True)
+                
+                # Find and select the edited profile after resorting
+                if profile_id_to_find:
+                    for row in range(self.profiles_table.rowCount()):
+                        profile_id_item = self.profiles_table.item(row, 8)  # Profile ID column
+                        if profile_id_item and profile_id_item.text() == profile_id_to_find:
+                            self.profiles_table.setCurrentCell(row, 0)
+                            break
+                
                 # No success dialog needed - profile updates silently
             else:
                 CustomMessageBox.show_error(self, "Error", 
