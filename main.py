@@ -1055,6 +1055,9 @@ class SamplechromeUI(QWidget):
                 if migrated:
                     self.save_profiles(profiles)
                 
+                # Sort profiles alphabetically by profile name
+                profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+                
                 return profiles
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error loading profiles: {e}")
@@ -1249,6 +1252,10 @@ class SamplechromeUI(QWidget):
             if reply:
                 # User confirmed, proceed with cleanup
                 self.profiles = valid_profiles
+                
+                # Sort profiles alphabetically by profile name after cleanup
+                self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+                
                 self.save_profiles(self.profiles)
                 self.populate_profiles_table()
                 
@@ -2218,6 +2225,9 @@ class SamplechromeUI(QWidget):
         # Add new profiles to existing list
         self.profiles.extend(new_profiles)
         
+        # Sort profiles alphabetically by profile name before saving
+        self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+        
         # Save to file
         if self.save_profiles(self.profiles):
             self.populate_profiles_table()
@@ -2346,6 +2356,9 @@ class SamplechromeUI(QWidget):
             
             # Update the profile
             self.profiles[current_row].update(edited_data)
+            
+            # Sort profiles alphabetically by profile name after editing
+            self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
             
             # Save to file
             if self.save_profiles(self.profiles):
