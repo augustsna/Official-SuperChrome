@@ -1526,7 +1526,10 @@ class SamplechromeUI(QWidget):
         self.sort_field_dropdown.addItems([
             "Name",
             "Profile",
+            "Channel type",
+            "Sub type",
             "Email",
+            "Notes",
             "Amount",
             "Profile ID"
         ])
@@ -1753,6 +1756,9 @@ class SamplechromeUI(QWidget):
         self.profiles_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.profiles_table.setHorizontalHeaderLabels(["#", "Name", "Profile", "Channel type", "Sub type", "Email", "Notes", "Amount", "Profile ID"])
         
+        # Enable header clicking for sorting
+        self.profiles_table.horizontalHeader().sectionClicked.connect(self.on_header_clicked)
+        
         # Set custom delegate for styling deleted profiles
         self.table_delegate = DeletedProfileDelegate(self.profiles_table)
         self.profiles_table.setItemDelegate(self.table_delegate)
@@ -1976,6 +1982,9 @@ class SamplechromeUI(QWidget):
         """Populate the profiles table with data from profile.json"""
         self.profiles_table.setRowCount(len(self.profiles))
         
+        # Initialize the mapping for unsorted state
+        self.table_row_to_profile_index = {i: i for i in range(len(self.profiles))}
+        
         deleted_rows = set()
         
         for row, profile in enumerate(self.profiles):
@@ -2164,8 +2173,14 @@ class SamplechromeUI(QWidget):
             column_index = 1
         elif sort_field == "Profile":
             column_index = 2
+        elif sort_field == "Channel type":
+            column_index = 3
+        elif sort_field == "Sub type":
+            column_index = 4
         elif sort_field == "Email":
             column_index = 5
+        elif sort_field == "Notes":
+            column_index = 6
         elif sort_field == "Amount":
             column_index = 7
         elif sort_field == "Profile ID":
@@ -2234,13 +2249,65 @@ class SamplechromeUI(QWidget):
         self.profiles_table.setRowCount(0)
         self.profiles_table.setRowCount(len(rows_data))
         
+        # Store the mapping of table rows to profile indices
+        self.table_row_to_profile_index = {}
+        
         for row, row_data in enumerate(rows_data):
+            # Find the original profile index by matching profile_id
+            profile_id = row_data[8]  # Profile ID column
+            original_index = None
+            for i, profile in enumerate(self.profiles):
+                if profile.get('profile_id', '') == profile_id:
+                    original_index = i
+                    break
+            
+            if original_index is not None:
+                self.table_row_to_profile_index[row] = original_index
+            
             for col, cell_data in enumerate(row_data):
                 item = QTableWidgetItem(cell_data)
                 # Apply center alignment for specific columns
                 if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.profiles_table.setItem(row, col, item)
+
+    def on_header_clicked(self, logical_index):
+        """Handle header clicks for sorting"""
+        # Map column index to sort field names
+        column_to_field = {
+            0: "Name",      # Number column sorts by Name
+            1: "Name", 
+            2: "Profile",
+            3: "Channel type",
+            4: "Sub type",
+            5: "Email",
+            6: "Notes",
+            7: "Amount",
+            8: "Profile ID"
+        }
+        
+        # Get current sort order from dropdown
+        current_order = self.sort_order_dropdown.currentText()
+        
+        # Toggle sort order if clicking the same column
+        if hasattr(self, '_last_sort_column') and self._last_sort_column == logical_index:
+            # Toggle order
+            new_order = "Z-A" if current_order == "A-Z" else "A-Z"
+            self.sort_order_dropdown.setCurrentText(new_order)
+        else:
+            # Default to ascending for new column
+            self.sort_order_dropdown.setCurrentText("A-Z")
+        
+        # Update sort field dropdown
+        if logical_index in column_to_field:
+            field_name = column_to_field[logical_index]
+            self.sort_field_dropdown.setCurrentText(field_name)
+        
+        # Store the clicked column
+        self._last_sort_column = logical_index
+        
+        # Trigger sorting
+        self.sort_profiles_table()
 
     def refresh_profiles(self):
         """Refresh the profiles table with updated data from profile.json"""
@@ -2344,12 +2411,19 @@ class SamplechromeUI(QWidget):
                                         "Please select a profile to launch.")
             return
         
-        if current_row >= len(self.profiles):
+        # Get the original profile index from the mapping
+        if hasattr(self, 'table_row_to_profile_index') and current_row in self.table_row_to_profile_index:
+            original_index = self.table_row_to_profile_index[current_row]
+        else:
+            # Fallback to current_row if no mapping exists (unsorted state)
+            original_index = current_row
+        
+        if original_index >= len(self.profiles):
             CustomMessageBox.show_error(self, "Error", 
                                       "Invalid profile selection.")
             return
         
-        selected_profile = self.profiles[current_row]
+        selected_profile = self.profiles[original_index]
         profile_id = selected_profile.get('profile_id', '')
         profile_name = selected_profile.get('name', '') or selected_profile.get('profile', '')
         
@@ -2405,12 +2479,19 @@ class SamplechromeUI(QWidget):
                                         "Please select a profile to edit.")
             return
         
-        if current_row >= len(self.profiles):
+        # Get the original profile index from the mapping
+        if hasattr(self, 'table_row_to_profile_index') and current_row in self.table_row_to_profile_index:
+            original_index = self.table_row_to_profile_index[current_row]
+        else:
+            # Fallback to current_row if no mapping exists (unsorted state)
+            original_index = current_row
+        
+        if original_index >= len(self.profiles):
             CustomMessageBox.show_error(self, "Error", 
                                       "Invalid profile selection.")
             return
         
-        selected_profile = self.profiles[current_row]
+        selected_profile = self.profiles[original_index]
         
         # Show edit dialog
         dialog = EditProfileDialog(self, selected_profile)
@@ -2419,7 +2500,7 @@ class SamplechromeUI(QWidget):
             edited_data = dialog.get_profile_data()
             
             # Update the profile
-            self.profiles[current_row].update(edited_data)
+            self.profiles[original_index].update(edited_data)
             
             # Sort profiles alphabetically by profile name after editing
             self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
