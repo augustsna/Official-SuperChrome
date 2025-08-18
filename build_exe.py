@@ -56,6 +56,7 @@ def build_executable():
         "--windowed",  # Don't show console window
         f"--icon={icon_path}",  # Set the icon
         "--name=SimpleChrome",  # Name of the executable
+        "--distpath=dist/SimpleChrome",  # Output to dist/SimpleChrome folder
         "--clean",  # Clean cache before building
         "--noconfirm",  # Don't ask for confirmation
         str(main_script)
@@ -76,7 +77,7 @@ def copy_additional_files():
     print("Copying additional files...")
     
     current_dir = Path.cwd()
-    dist_dir = current_dir / "dist"
+    dist_dir = current_dir / "dist" / "SimpleChrome"
     
     # Files to copy
     files_to_copy = [
@@ -130,10 +131,10 @@ def main():
     print("\n" + "=" * 50)
     print("Build completed successfully!")
     print("=" * 50)
-    print("Executable location: dist/SimpleChrome.exe")
-    print("Additional files have been copied to the dist directory.")
+    print("Executable location: dist/SimpleChrome/SimpleChrome.exe")
+    print("Additional files have been copied to the dist/SimpleChrome directory.")
     print("\nTo run the application:")
-    print("1. Navigate to the dist directory")
+    print("1. Navigate to the dist/SimpleChrome directory")
     print("2. Double-click SimpleChrome.exe")
     print("\nNote: The first run may take a few seconds to start.")
     
