@@ -505,6 +505,55 @@ class EditProfileDialog(QDialog):
             }
         """)
         form_layout.addRow("Email:", self.email_edit)
+
+        # Name field
+        self.name_edit = QLineEdit()
+        self.name_edit.setText(self.profile_data.get('name', ''))
+        self.name_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Name:", self.name_edit)
+        
+        layout.addLayout(form_layout)
+        
+        # Total Channel field
+        self.total_channel_edit = QLineEdit()
+        self.total_channel_edit.setText(self.profile_data.get('total_channel', ''))
+        self.total_channel_edit.setPlaceholderText("Enter total number of channels")
+        # Add number-only validation
+        from PyQt6.QtGui import QIntValidator
+        self.total_channel_edit.setValidator(QIntValidator(0, 999999))  # Allow 0 to 999999
+        self.total_channel_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Amount:", self.total_channel_edit)
+        
+        # Notes field
+        self.notes_edit = QLineEdit()
+        self.notes_edit.setText(self.profile_data.get('notes', ''))
+        self.notes_edit.setPlaceholderText("Enter notes about this profile")
+        self.notes_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 4px 4px;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 14px;
+                background-color: white;
+            }
+        """)
+        form_layout.addRow("Notes:", self.notes_edit)
         
         # Channel Types field (toggle buttons instead of list)
         from PyQt6.QtWidgets import QFrame
@@ -774,55 +823,6 @@ class EditProfileDialog(QDialog):
                 self.sub_type_buttons[sub_type].setChecked(True)
         
         form_layout.addRow("Sub type:", self.sub_types_container)
-        
-        # Name field
-        self.name_edit = QLineEdit()
-        self.name_edit.setText(self.profile_data.get('name', ''))
-        self.name_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 4px 4px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                font-size: 14px;
-                background-color: white;
-            }
-        """)
-        form_layout.addRow("Name:", self.name_edit)
-        
-        layout.addLayout(form_layout)
-        
-        # Total Channel field
-        self.total_channel_edit = QLineEdit()
-        self.total_channel_edit.setText(self.profile_data.get('total_channel', ''))
-        self.total_channel_edit.setPlaceholderText("Enter total number of channels")
-        # Add number-only validation
-        from PyQt6.QtGui import QIntValidator
-        self.total_channel_edit.setValidator(QIntValidator(0, 999999))  # Allow 0 to 999999
-        self.total_channel_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 4px 4px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                font-size: 14px;
-                background-color: white;
-            }
-        """)
-        form_layout.addRow("Amount:", self.total_channel_edit)
-        
-        # Notes field
-        self.notes_edit = QLineEdit()
-        self.notes_edit.setText(self.profile_data.get('notes', ''))
-        self.notes_edit.setPlaceholderText("Enter notes about this profile")
-        self.notes_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 4px 4px;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                font-size: 14px;
-                background-color: white;
-            }
-        """)
-        form_layout.addRow("Notes:", self.notes_edit)
         
         # Cancel button
         cancel_btn = QPushButton("Cancel")
