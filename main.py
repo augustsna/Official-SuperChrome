@@ -775,11 +775,10 @@ class EditProfileDialog(QDialog):
         
         form_layout.addRow("Sub type:", self.sub_types_container)
         
-        # Notes field
-        self.notes_edit = QLineEdit()
-        self.notes_edit.setText(self.profile_data.get('notes', ''))
-        self.notes_edit.setPlaceholderText("Enter notes about this profile")
-        self.notes_edit.setStyleSheet("""
+        # Name field
+        self.name_edit = QLineEdit()
+        self.name_edit.setText(self.profile_data.get('name', ''))
+        self.name_edit.setStyleSheet("""
             QLineEdit {
                 padding: 4px 4px;
                 border: 1px solid #e0e0e0;
@@ -788,7 +787,9 @@ class EditProfileDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Notes:", self.notes_edit)
+        form_layout.addRow("Name:", self.name_edit)
+        
+        layout.addLayout(form_layout)
         
         # Total Channel field
         self.total_channel_edit = QLineEdit()
@@ -808,10 +809,11 @@ class EditProfileDialog(QDialog):
         """)
         form_layout.addRow("Amount:", self.total_channel_edit)
         
-        # Name field
-        self.name_edit = QLineEdit()
-        self.name_edit.setText(self.profile_data.get('name', ''))
-        self.name_edit.setStyleSheet("""
+        # Notes field
+        self.notes_edit = QLineEdit()
+        self.notes_edit.setText(self.profile_data.get('notes', ''))
+        self.notes_edit.setPlaceholderText("Enter notes about this profile")
+        self.notes_edit.setStyleSheet("""
             QLineEdit {
                 padding: 4px 4px;
                 border: 1px solid #e0e0e0;
@@ -820,9 +822,7 @@ class EditProfileDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Name:", self.name_edit)
-        
-        layout.addLayout(form_layout)
+        form_layout.addRow("Notes:", self.notes_edit)
         
         # Cancel button
         cancel_btn = QPushButton("Cancel")
