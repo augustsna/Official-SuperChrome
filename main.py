@@ -1861,6 +1861,9 @@ class SamplechromeUI(QWidget):
             }
         """)
         
+        # Connect double-click event to launch profile
+        self.profiles_table.cellDoubleClicked.connect(self.on_table_double_clicked)
+        
         # Populate table with profile data
         self.populate_profiles_table()
         
@@ -2478,6 +2481,13 @@ class SamplechromeUI(QWidget):
         except Exception as e:
             CustomMessageBox.show_error(self, "Launch Error", 
                                       f"Failed to launch Chrome profile: {str(e)}")
+
+    def on_table_double_clicked(self, row, column):
+        """Handle double-click events on the profiles table to launch the selected profile"""
+        # Set the current row to the clicked row
+        self.profiles_table.setCurrentCell(row, 0)
+        # Launch the profile
+        self.launch_selected_profile()
 
     def edit_selected_profile(self):
         """Edit the selected profile"""
