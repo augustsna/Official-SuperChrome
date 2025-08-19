@@ -12,13 +12,13 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QSettings, QSize, QTimer
 from PyQt6.QtGui import QIcon, QPixmap, QColor
 
-# Sample configuration constants
+# Simple configuration constants
 WINDOW_SIZE = (760, 577)
-WINDOW_TITLE = "Sample chrome UI"
+WINDOW_TITLE = "Simple chrome UI"
 ICON_PATH = "src/icon.png"
 PROJECT_ROOT = "."
 
-# Sample stylesheet with correct colors matching chrome
+# Simple stylesheet with correct colors matching chrome
 STYLE_SHEET = """
 QWidget {
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -1005,12 +1005,12 @@ def natural_sort_key(text):
     return [int(part) if part.isdigit() else part.lower() for part in parts]
 
 
-class SamplechromeUI(QWidget):
-    """Sample main application window demonstrating chrome UI structure"""
+class SimplechromeUI(QWidget):
+    """Simple main application window demonstrating chrome UI structure"""
     
     def __init__(self):
         super().__init__()
-        self.settings = QSettings('Samplechrome', 'SamplechromeUI')
+        self.settings = QSettings('Simplechrome', 'SimplechromeUI')
         self.config = self.load_config()
         self.profiles = self.load_profiles()
         self.init_ui()
@@ -1027,7 +1027,7 @@ class SamplechromeUI(QWidget):
             return {
                 'channel_types': ['user_custom', 'Chrome Profile', 'Standard', 'Premium', 'Basic'],
                 'app_settings': {
-                    'window_title': 'Sample chrome UI',
+                    'window_title': 'Simple chrome UI',
                     'window_size': [760, 577],
                     'icon_path': 'src/icon.png'
                 }
@@ -2557,11 +2557,11 @@ class SamplechromeUI(QWidget):
         layout.addLayout(action_layout)
 
 def main():
-    """Main function to run the sample application"""
+    """Main function to run the Simple application"""
     app = QApplication(sys.argv)
     
     # Create and show the main window
-    window = SamplechromeUI()
+    window = SimplechromeUI()
     window.show()
     
     # Run the application

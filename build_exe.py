@@ -14,10 +14,10 @@ def check_pyinstaller():
     """Check if PyInstaller is installed"""
     try:
         import PyInstaller
-        print("✓ PyInstaller is installed")
+        print("[OK] PyInstaller is installed")
         return True
     except ImportError:
-        print("✗ PyInstaller is not installed")
+        print("[WARN] PyInstaller is not installed")
         return False
 
 def install_pyinstaller():
@@ -25,10 +25,10 @@ def install_pyinstaller():
     print("Installing PyInstaller...")
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
-        print("✓ PyInstaller installed successfully")
+        print("[OK] PyInstaller installed successfully")
         return True
     except subprocess.CalledProcessError:
-        print("✗ Failed to install PyInstaller")
+        print("[ERROR] Failed to install PyInstaller")
         return False
 
 def build_executable():
@@ -39,26 +39,68 @@ def build_executable():
     current_dir = Path.cwd()
     icon_path = current_dir / "src" / "icon.png"
     main_script = current_dir / "main.py"
+    build_dir = current_dir / "build"
+    build_dir.mkdir(exist_ok=True)
+
+    # Create a basic Windows version info file to embed metadata (helps reduce AV false positives)
+    version_info_path = build_dir / "version_info.txt"
+    try:
+        version_info_path.write_text(
+            """
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable('040904B0', [
+        StringStruct('CompanyName', 'SimpleChrome'),
+        StringStruct('FileDescription', 'SimpleChrome Application'),
+        StringStruct('FileVersion', '1.0.0.0'),
+        StringStruct('InternalName', 'SimpleChrome'),
+        StringStruct('LegalCopyright', '(c) 2025 SimpleChrome'),
+        StringStruct('OriginalFilename', 'SimpleChrome.exe'),
+        StringStruct('ProductName', 'SimpleChrome'),
+        StringStruct('ProductVersion', '1.0.0.0')
+      ])
+    ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)
+""".strip(),
+            encoding="utf-8"
+        )
+    except Exception as e:
+        print(f"[WARN] Failed to write version info file: {e}")
     
     # Check if required files exist
     if not icon_path.exists():
-        print(f"✗ Icon file not found: {icon_path}")
+        print(f"[ERROR] Icon file not found: {icon_path}")
         return False
     
     if not main_script.exists():
-        print(f"✗ Main script not found: {main_script}")
+        print(f"[ERROR] Main script not found: {main_script}")
         return False
     
     # PyInstaller command
     cmd = [
         sys.executable, "-m", "PyInstaller",
-        "--onefile",  # Create a single executable file
+        "--onedir",  # Prefer onedir to reduce AV false positives
         "--windowed",  # Don't show console window
         f"--icon={icon_path}",  # Set the icon
         "--name=SimpleChrome",  # Name of the executable
-        "--distpath=dist/SimpleChrome",  # Output to dist/SimpleChrome folder
+        "--distpath=dist",  # Output to dist folder; final dir will be dist/SimpleChrome
         "--clean",  # Clean cache before building
         "--noconfirm",  # Don't ask for confirmation
+        "--noupx",  # Ensure UPX compression is not used
+        f"--version-file={version_info_path}",  # Embed version metadata
         str(main_script)
     ]
     
@@ -66,10 +108,10 @@ def build_executable():
         print("Running PyInstaller...")
         print(f"Command: {' '.join(cmd)}")
         subprocess.check_call(cmd)
-        print("✓ Executable built successfully!")
+        print("[OK] Executable built successfully!")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"✗ Failed to build executable: {e}")
+        print(f"[ERROR] Failed to build executable: {e}")
         return False
 
 def copy_additional_files():
@@ -92,9 +134,9 @@ def copy_additional_files():
         
         if src_file.exists():
             shutil.copy2(src_file, dst_file)
-            print(f"✓ Copied {file_name}")
+            print(f"[OK] Copied {file_name}")
         else:
-            print(f"⚠ Warning: {file_name} not found, skipping...")
+            print(f"[WARN] {file_name} not found, skipping...")
     
     # Copy src directory
     src_dir = current_dir / "src"
@@ -104,9 +146,9 @@ def copy_additional_files():
         if dst_src_dir.exists():
             shutil.rmtree(dst_src_dir)
         shutil.copytree(src_dir, dst_src_dir)
-        print("✓ Copied src directory")
+        print("[OK] Copied src directory")
     else:
-        print("⚠ Warning: src directory not found, skipping...")
+        print("[WARN] src directory not found, skipping...")
 
 def main():
     """Main build function"""
@@ -131,8 +173,10 @@ def main():
     print("\n" + "=" * 50)
     print("Build completed successfully!")
     print("=" * 50)
-    print("Executable location: dist/SimpleChrome/SimpleChrome.exe")
-    print("Additional files have been copied to the dist/SimpleChrome directory.")
+    dist_dir = Path.cwd() / "dist" / "SimpleChrome"
+    exe_path = dist_dir / "SimpleChrome.exe"
+    print(f"Executable location: {exe_path}")
+    print(f"Additional files have been copied to the {dist_dir} directory.")
     print("\nTo run the application:")
     print("1. Navigate to the dist/SimpleChrome directory")
     print("2. Double-click SimpleChrome.exe")
