@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import shutil
+import ctypes
 from pathlib import Path
 
 def check_pyinstaller():
@@ -149,6 +150,22 @@ def copy_additional_files():
         print("[OK] Copied src directory")
     else:
         print("[WARN] src directory not found, skipping...")
+
+    # Hide resource directory on Windows for a cleaner distribution
+    try:
+        if os.name == "nt":
+            FILE_ATTRIBUTE_HIDDEN = 0x2
+            FILE_ATTRIBUTE_SYSTEM = 0x4
+            for name in ["@src", "src"]:
+                candidate = dist_dir / name
+                if candidate.exists():
+                    result = ctypes.windll.kernel32.SetFileAttributesW(str(candidate), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)
+                    if result == 0:
+                        print(f"[WARN] Failed to hide directory: {candidate}")
+                    else:
+                        print(f"[OK] Hidden directory: {candidate}")
+    except Exception as e:
+        print(f"[WARN] Error while hiding resource directory: {e}")
 
 def main():
     """Main build function"""
