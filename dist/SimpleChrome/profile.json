@@ -2,7 +2,315 @@
   "profiles": [
     {
       "name": "",
-      "profile": "Alpha",
+      "profile": "Profile_Simple 1",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (1)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 1",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_1",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 10",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (10)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 10",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_10",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 11",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (11)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 11",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_11",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 2",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (2)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 2",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_2",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 3",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (3)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 3",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_3",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 4",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (4)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 4",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_4",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 5",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (5)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 5",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_5",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 6",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (6)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 6",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_6",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 7",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (7)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 7",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_7",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 8",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (8)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 8",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_8",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 9",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple (9)",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Profile_Simple 9",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Profile_Simple_9",
+      "email": "",
+      "total_channel": "",
+      "notes": "Created by SimpleChrome"
+    },
+    {
+      "name": "",
+      "profile": "Your Chrome",
       "channel_types": [
         "user_custom"
       ],
@@ -10,7 +318,7 @@
         "Personal"
       ],
       "profile_id": "Default",
-      "email": "veasnar.sg@gmail.com",
+      "email": "",
       "total_channel": "",
       "notes": ""
     }
