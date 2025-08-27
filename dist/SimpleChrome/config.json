@@ -1,0 +1,21 @@
+{
+  "channel_types": [
+    "user_custom",
+    "Music",
+    "Story",
+    "Live",
+    "Game",
+    "AI",
+    "Other"
+  ],
+  "sub_types": [
+    "Ragged",
+    "Country",
+    "Other"
+  ],
+  "app_settings": {
+    "window_title": "Simple Chrome UI",
+    "window_size": [600, 500],
+    "icon_path": "src/icon.png"
+  }
+}

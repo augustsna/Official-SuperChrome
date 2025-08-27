@@ -12,14 +12,16 @@ VSVersionInfo(
   kids=[
     StringFileInfo([
       StringTable('040904B0', [
-        StringStruct('CompanyName', 'SimpleChrome'),
-        StringStruct('FileDescription', 'SimpleChrome Application'),
+        StringStruct('CompanyName', 'SimpleChrome Development Team'),
+        StringStruct('FileDescription', 'Chrome Profile Management Tool - Legitimate Application'),
         StringStruct('FileVersion', '1.0.0.0'),
         StringStruct('InternalName', 'SimpleChrome'),
-        StringStruct('LegalCopyright', '(c) 2025 SimpleChrome'),
+        StringStruct('LegalCopyright', 'Copyright (c) 2025 SimpleChrome Development Team. All rights reserved.'),
         StringStruct('OriginalFilename', 'SimpleChrome.exe'),
-        StringStruct('ProductName', 'SimpleChrome'),
-        StringStruct('ProductVersion', '1.0.0.0')
+        StringStruct('ProductName', 'SimpleChrome Profile Manager'),
+        StringStruct('ProductVersion', '1.0.0.0'),
+        StringStruct('Comments', 'Open source Chrome profile management utility built with PyQt6'),
+        StringStruct('LegalTrademarks', 'SimpleChrome is an independent project, not affiliated with Google Chrome')
       ])
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])

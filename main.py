@@ -3229,9 +3229,11 @@ class SamplechromeUI(QWidget):
             # Determine sort order (A-Z = ascending, Z-A = descending)
             reverse_order = (sort_order == "Z-A")
             
-            # Special handling for Profile ID column to use natural sorting
+            # Special handling for Profile ID and Profile columns to use natural sorting
             if sort_field == "Profile ID":
                 self.custom_sort_profile_id_column(reverse_order)
+            elif sort_field == "Profile":
+                self.custom_sort_profile_column(reverse_order)
             else:
                 # Custom sorting to handle empty values last for all columns
                 self.custom_sort_column(column_index, reverse_order)
@@ -3260,8 +3262,8 @@ class SamplechromeUI(QWidget):
         # Clear the table and repopulate with sorted data
         self._repopulate_table_with_sorted_data(rows_data)
 
-    def custom_sort_column(self, column_index, reverse_order=False):
-        """Custom sort for any column with empty values last"""
+    def custom_sort_profile_column(self, reverse_order=False):
+        """Custom sort for Profile column using natural sorting"""
         # Get all rows data
         rows_data = []
         for row in range(self.profiles_table.rowCount()):
@@ -3271,12 +3273,36 @@ class SamplechromeUI(QWidget):
                 row_data.append(item.text() if item else "")
             rows_data.append(row_data)
         
-        # Sort with empty values last
+        # Sort using natural sorting key for Profile column (column 2)
+        # Empty values will be sorted last
+        def sort_key_with_empty_last(row):
+            profile_name = row[2].strip()
+            if not profile_name:
+                return (1, "")  # Empty values get highest sort key
+            return (0, natural_sort_key(profile_name))  # Non-empty values get natural sort key
+        
+        rows_data.sort(key=sort_key_with_empty_last, reverse=reverse_order)
+        
+        # Clear the table and repopulate with sorted data
+        self._repopulate_table_with_sorted_data(rows_data)
+
+    def custom_sort_column(self, column_index, reverse_order=False):
+        """Custom sort for any column with empty values last using natural sorting"""
+        # Get all rows data
+        rows_data = []
+        for row in range(self.profiles_table.rowCount()):
+            row_data = []
+            for col in range(self.profiles_table.columnCount()):
+                item = self.profiles_table.item(row, col)
+                row_data.append(item.text() if item else "")
+            rows_data.append(row_data)
+        
+        # Sort with empty values last using natural sorting
         def sort_key_with_empty_last(row):
             cell_value = row[column_index].strip()
             if not cell_value:
                 return (1, "")  # Empty values get highest sort key
-            return (0, cell_value.lower())  # Non-empty values get normal sort key
+            return (0, natural_sort_key(cell_value))  # Non-empty values get natural sort key
         
         rows_data.sort(key=sort_key_with_empty_last, reverse=reverse_order)
         
@@ -3448,7 +3474,7 @@ class SamplechromeUI(QWidget):
                     'profile_id': profile_id,
                     'email': '',
                     'total_channel': '',
-                    'notes': f'Created by SimpleChrome'
+                    'notes': f'SimpleChrome'
                 }
                 
                 created_profiles.append(new_profile)
