@@ -422,6 +422,231 @@ class CustomMessageBox(QDialog):
         return result == QDialog.DialogCode.Accepted
 
 
+class LargeCustomMessageBox(QDialog):
+    """Large custom message box dialog with consistent styling and bigger size"""
+    
+    def __init__(self, parent=None, title="Message", message="", message_type="info"):
+        super().__init__(parent)
+        
+        # Performance optimizations for smoother dialog
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
+        
+        self.setWindowTitle(title)
+        self.setModal(True)
+        self.setMinimumSize(360, 200)
+        self.setMaximumSize(360, 200)
+        self.resize(360, 200)
+        self.message_type = message_type
+        self.init_ui(title, message)
+        
+    def init_ui(self, title, message):
+        """Initialize the dialog UI"""
+        self.setStyleSheet(f"""
+            QDialog {{
+                background: #f5f7fa;
+                border-radius: 10px;
+            }}
+            QLabel#iconLabel {{
+                font-size: 30px;
+                color: {self.get_icon_color()};
+                margin: 0;
+                padding: 0;
+            }}
+            QLabel#titleLabel {{
+                font-size: 15px;
+                color: #000000;
+                font-weight: 700;
+                margin-bottom: 12px;
+            }}
+            QLabel#messageLabel {{
+                font-size: 14px;
+                color: #222;
+                font-weight: 500;
+                margin-top: 8px;
+                margin-bottom: 8px;
+                line-height: 1.5;
+            }}
+            QPushButton {{
+                background-color: {self.get_button_color()};
+                color: {self.get_button_text_color()};
+                font-size: 13px;
+                padding: 7px 18px;
+                border-radius: 6px;
+                margin-top: 8px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.get_button_hover_color()};
+            }}
+        """)
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 25, 20, 35)
+        layout.setSpacing(5)
+
+        # Icon
+        icon = QLabel(self.get_icon_text())
+        icon.setObjectName("iconLabel")
+        icon.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(icon)
+
+        # Title
+        title_label = QLabel(title)
+        title_label.setObjectName("titleLabel")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(title_label)
+
+        # Message
+        message_label = QLabel(message)
+        message_label.setObjectName("messageLabel")
+        message_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        message_label.setWordWrap(True)
+        layout.addWidget(message_label)
+
+        # Buttons row
+        self.btn_row = QHBoxLayout()
+        self.btn_row.addStretch()
+        # OK button
+        self.ok_button = QPushButton("OK")
+        self.ok_button.setFixedWidth(120)  # Larger button width
+        self.ok_button.setDefault(True)
+        self.ok_button.clicked.connect(self.accept)
+        self.btn_row.addWidget(self.ok_button)
+        self.btn_row.addStretch()
+        layout.addLayout(self.btn_row)
+
+        # Shortcut
+        from PyQt6.QtGui import QShortcut, QKeySequence
+        QShortcut(QKeySequence("Ctrl+W"), self, self.close)
+        self.adjustSize()
+        
+    def get_icon_text(self):
+        """Get icon text based on message type"""
+        icons = {
+            "info": "ℹ",
+            "success": "✓",
+            "warning": "⚠️", 
+            "error": "✕"
+        }
+        return icons.get(self.message_type, "ℹ")
+        
+    def get_icon_color(self):
+        """Get icon color based on message type"""
+        colors = {
+            "info": "#4a90e2",
+            "success": "#28a745",
+            "warning": "#e67e22", 
+            "error": "#dc3545"
+        }
+        return colors.get(self.message_type, "#4a90e2")
+        
+    def get_button_color(self):
+        """Get button color based on message type"""
+        colors = {
+            "info": "#4a90e2",
+            "success": "#28a745",
+            "warning": "#e67e22",
+            "error": "#dc3545"
+        }
+        return colors.get(self.message_type, "#4a90e2")
+        
+    def get_button_text_color(self):
+        """Get button text color based on message type"""
+        return "white"
+        
+    def get_button_hover_color(self):
+        """Get button hover color based on message type"""
+        colors = {
+            "info": "#357ABD",
+            "success": "#218838",
+            "warning": "#d35400",
+            "error": "#c82333"
+        }
+        return colors.get(self.message_type, "#357ABD")
+
+    @staticmethod
+    def show_info(parent, title, message):
+        """Show info message dialog"""
+        dialog = LargeCustomMessageBox(parent, title, message, "info")
+        dialog.exec()
+        
+    @staticmethod
+    def show_success(parent, title, message):
+        """Show success message dialog"""
+        dialog = LargeCustomMessageBox(parent, title, message, "success")
+        dialog.exec()
+        
+    @staticmethod
+    def show_warning(parent, title, message):
+        """Show warning message dialog"""
+        dialog = LargeCustomMessageBox(parent, title, message, "warning")
+        dialog.exec()
+        
+    @staticmethod
+    def show_error(parent, title, message):
+        """Show error message dialog"""
+        dialog = LargeCustomMessageBox(parent, title, message, "error")
+        dialog.exec()
+        
+    @staticmethod
+    def show_confirmation(parent, title, message):
+        """Show confirmation dialog with Yes/No buttons"""
+        dialog = LargeCustomMessageBox(parent, title, message, "warning")
+        
+        # Replace the OK button with Yes/No buttons
+        ok_button = dialog.ok_button
+        ok_button.setText("Yes")
+        ok_button.setFixedSize(120, 30)  # Larger button for large dialog
+        ok_button.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745 !important;
+                color: white !important;
+                border-radius: 6px !important;
+                padding: 8px 16px !important;
+                font-size: 14px !important;
+                margin-top: 0px !important;
+            }
+            QPushButton:hover {
+                background-color: #218838 !important;
+            }
+        """)
+        
+        # Add No button
+        no_button = QPushButton("No")
+        no_button.setFixedSize(120, 30)  # Larger button for large dialog
+        no_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4a90e2 !important;
+                color: white !important;
+                border-radius: 6px !important;
+                padding: 8px 16px !important;
+                font-size: 14px !important;
+                margin-top: 0px !important;
+            }
+            QPushButton:hover {
+                background-color: #357ABD !important;
+            }
+        """)
+        no_button.clicked.connect(dialog.reject)
+        
+        # Update the button layout - clear existing widgets and add in correct order
+        # Remove existing widgets from btn_row
+        while dialog.btn_row.count():
+            child = dialog.btn_row.takeAt(0)
+            if child.widget():
+                child.widget().setParent(None)
+        
+        # Add buttons directly to btn_row in correct order: Yes, then No
+        dialog.btn_row.addStretch()
+        dialog.btn_row.addWidget(ok_button)  # Yes button
+        dialog.btn_row.addSpacing(15)  # Larger spacing for large dialog
+        dialog.btn_row.addWidget(no_button)  # No button
+        dialog.btn_row.addStretch()
+        
+        result = dialog.exec()
+        return result == QDialog.DialogCode.Accepted
+
+
 class EditProfileDialog(QDialog):
     """Dialog for editing profile information"""
     
@@ -1017,7 +1242,7 @@ class CreateMultipleProfilesDialog(QDialog):
         
         # Total extra height needed
         total_extra_height = channel_extra_height + sub_extra_height
-        dynamic_height = 620 + total_extra_height
+        dynamic_height = 740 + total_extra_height
         
         self.setFixedSize(500, dynamic_height)
         self.setModal(True)
@@ -1056,8 +1281,8 @@ class CreateMultipleProfilesDialog(QDialog):
         
         # Number of profiles to create
         self.num_profiles_edit = QLineEdit()
-        self.num_profiles_edit.setText("0")
-        self.num_profiles_edit.setPlaceholderText("Enter number of profiles (1-50)")
+        self.num_profiles_edit.setText("1")
+        self.num_profiles_edit.setPlaceholderText("Enter number of profiles (1-250)")
         self.num_profiles_edit.setStyleSheet("""
             QLineEdit {
                 padding: 4px 4px;
@@ -1067,11 +1292,10 @@ class CreateMultipleProfilesDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Number of Profiles:", self.num_profiles_edit)
         
         # Base profile name
         self.base_name_edit = QLineEdit()
-        self.base_name_edit.setText("Profile")
+        self.base_name_edit.setText("Profile_Simple")
         self.base_name_edit.setPlaceholderText("Enter base name for profiles")
         self.base_name_edit.setStyleSheet("""
             QLineEdit {
@@ -1082,7 +1306,6 @@ class CreateMultipleProfilesDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Base Profile Name:", self.base_name_edit)
         
         # Starting number
         self.start_num_edit = QLineEdit()
@@ -1097,12 +1320,12 @@ class CreateMultipleProfilesDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Starting Number:", self.start_num_edit)
+
         
         # Profile ID Prefix
         self.profile_id_prefix_edit = QLineEdit()
-        self.profile_id_prefix_edit.setText("P_SimpleChrome")
-        self.profile_id_prefix_edit.setPlaceholderText("Enter profile ID prefix (e.g., P_SimpleChrome)")
+        self.profile_id_prefix_edit.setText("Profile_Simple")
+        self.profile_id_prefix_edit.setPlaceholderText("Enter profile ID prefix")
         self.profile_id_prefix_edit.setStyleSheet("""
             QLineEdit {
                 padding: 4px 4px;
@@ -1112,8 +1335,7 @@ class CreateMultipleProfilesDialog(QDialog):
                 background-color: white;
             }
         """)
-        form_layout.addRow("Profile ID Prefix:", self.profile_id_prefix_edit)
-        
+            
         # Channel Types field (toggle buttons instead of list)
         from PyQt6.QtWidgets import QFrame
         
@@ -1239,7 +1461,7 @@ class CreateMultipleProfilesDialog(QDialog):
         if 'user_custom' in self.channel_type_buttons:
             self.channel_type_buttons['user_custom'].setChecked(True)
         
-        form_layout.addRow("Channel type:", self.channel_types_container)
+
         
         # Sub Types field (toggle buttons like channel types)
         # Create a container for sub type buttons
@@ -1360,7 +1582,8 @@ class CreateMultipleProfilesDialog(QDialog):
         # Add utility buttons to the main layout
         self.sub_types_layout.addLayout(sub_utility_layout)
         
-        form_layout.addRow("Sub type:", self.sub_types_container)
+
+
         
         # Add checkbox for creating profiles on disk
         self.create_on_disk_checkbox = QCheckBox("Create actual Chrome profile directories on disk")
@@ -1386,7 +1609,7 @@ class CreateMultipleProfilesDialog(QDialog):
                 background-color: #28a745;
             }
         """)
-        form_layout.addRow("", self.create_on_disk_checkbox)
+
         
         # Add preview section
         preview_label = QLabel("Preview:")
@@ -1411,7 +1634,7 @@ class CreateMultipleProfilesDialog(QDialog):
         profile_ids_label = QLabel("Profile IDs:")
         profile_ids_label.setStyleSheet("font-weight: 500; color: #555555; margin-top: 5px;")
         
-        self.profile_ids_preview = QLabel("P_SimpleChrome_1, P_SimpleChrome_2, P_SimpleChrome_3...")
+        self.profile_ids_preview = QLabel("Profile_Simple 1, Profile_Simple 2, Profile_Simple 3...")
         self.profile_ids_preview.setStyleSheet("""
             color: #666666;
             font-style: italic;
@@ -1427,13 +1650,13 @@ class CreateMultipleProfilesDialog(QDialog):
         self.start_num_edit.textChanged.connect(self.update_preview)
         self.profile_id_prefix_edit.textChanged.connect(self.update_preview)
         
-        # Add help tooltips
-        self.num_profiles_edit.setToolTip("Enter the number of profiles you want to create (1-50)")
-        self.base_name_edit.setToolTip("Enter the base name for your profiles (e.g., 'Profile' will create 'Profile 1', 'Profile 2', etc.)")
-        self.start_num_edit.setToolTip("Enter the starting number for your profiles (e.g., 1 will start with 'Profile 1', 100 will start with 'Profile 100')")
-        self.profile_id_prefix_edit.setToolTip("Enter the prefix for profile IDs (e.g., 'P_SimpleChrome' will create 'P_SimpleChrome_1', 'P_SimpleChrome_2', etc.)")
-        self.create_on_disk_checkbox.setToolTip("Check this to create actual Chrome profile directories on disk, making them immediately available in Chrome")
-        
+        form_layout.addRow("Profile ID Prefix:", self.profile_id_prefix_edit)
+        form_layout.addRow("Base Profile Name:", self.base_name_edit)
+        form_layout.addRow("Starting Number #", self.start_num_edit)
+        form_layout.addRow("Number of Profiles:", self.num_profiles_edit)
+        form_layout.addRow("Channel type:", self.channel_types_container)
+        form_layout.addRow("Sub type:", self.sub_types_container)
+        form_layout.addRow("", self.create_on_disk_checkbox)
         form_layout.addRow(preview_label, profile_names_label)
         form_layout.addRow("", self.profile_names_preview)
         form_layout.addRow("", profile_ids_label)
@@ -1442,10 +1665,9 @@ class CreateMultipleProfilesDialog(QDialog):
         layout.addLayout(form_layout)
         
         # Buttons
-        button_layout = QHBoxLayout()
         
-        create_btn = QPushButton("Create Profiles")
-        create_btn.setFixedSize(120, 35)
+        create_btn = QPushButton("Create")
+        create_btn.setFixedSize(100, 30)
         create_btn.clicked.connect(self.accept)
         create_btn.setStyleSheet("""
             QPushButton {
@@ -1462,31 +1684,90 @@ class CreateMultipleProfilesDialog(QDialog):
         """)
         
         cancel_btn = QPushButton("Cancel")
-        cancel_btn.setFixedSize(100, 35)
+        cancel_btn.setFixedSize(100, 30)
         cancel_btn.clicked.connect(self.reject)
         cancel_btn.setStyleSheet("""
             QPushButton {
-                background-color: #6c757d;
+                background-color: #4a90e2;
                 color: white;
-                border: none;
                 border-radius: 6px;
-                padding: 8px 16px;
-                font-weight: 500;
+                padding: 4px 8px;
+                font-size: normal;
             }
             QPushButton:hover {
-                background-color: #5a6268;
+                background-color: #357ABD;
             }
         """)
         
+        # Open Chrome Data button
+        open_chrome_data_btn = QPushButton("Chrome Data")
+        open_chrome_data_btn.setFixedSize(100, 30)
+        open_chrome_data_btn.clicked.connect(self.open_chrome_data_directory)
+        open_chrome_data_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ffffff;
+                color: #333333;
+                border: none;
+                border-radius: 6px;
+                padding: 4px 8px;
+                font-weight: 500;
+                border: 1px solid #cccccc;
+            }
+            QPushButton:hover {
+                background-color: #ffffff;
+                border: 2px solid #cccccc;
+            }
+        """)
+        
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(open_chrome_data_btn)
         button_layout.addStretch()
         button_layout.addWidget(create_btn)
         button_layout.addWidget(cancel_btn)
+        button_layout.addStretch()
         layout.addLayout(button_layout)
         
         # Add keyboard shortcuts
         from PyQt6.QtGui import QShortcut, QKeySequence
         QShortcut(QKeySequence("Ctrl+W"), self, self.close)
         QShortcut(QKeySequence("Escape"), self, self.reject)
+        
+        # Update preview with initial values
+        self.update_preview()
+    
+    def open_chrome_data_directory(self):
+        """Open the Chrome User Data directory in file explorer"""
+        import subprocess
+        import platform
+        import os
+        
+        try:
+            # Determine Chrome user data directory based on OS
+            system = platform.system()
+            if system == "Windows":
+                chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+            elif system == "Darwin":  # macOS
+                chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+            else:  # Linux
+                chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+            
+            # Check if directory exists
+            if not os.path.exists(chrome_data_dir):
+                CustomMessageBox.show_warning(self, "Directory Not Found", 
+                                            f"Chrome User Data directory not found at:\n{chrome_data_dir}\n\nChrome may not be installed or may be using a different location.")
+                return
+            
+            # Open directory in file explorer
+            if system == "Windows":
+                subprocess.run(['explorer', chrome_data_dir])
+            elif system == "Darwin":  # macOS
+                subprocess.run(['open', chrome_data_dir])
+            else:  # Linux
+                subprocess.run(['xdg-open', chrome_data_dir])
+                
+        except Exception as e:
+            CustomMessageBox.show_error(self, "Error", 
+                                      f"An error occurred while trying to open the directory:\n{str(e)}")
     
     def get_profile_data(self):
         """Get the profile creation data"""
@@ -1499,8 +1780,8 @@ class CreateMultipleProfilesDialog(QDialog):
             num_profiles = int(num_profiles_text)
             if num_profiles < 1:
                 raise ValueError("Number of profiles must be at least 1")
-            if num_profiles > 50:
-                raise ValueError("Number of profiles cannot exceed 50")
+            if num_profiles > 250:
+                raise ValueError("Number of profiles cannot exceed 250")
             
             # Get and validate base name
             base_name = self.base_name_edit.text().strip()
@@ -1535,7 +1816,7 @@ class CreateMultipleProfilesDialog(QDialog):
                 'start_num': start_num,
                 'channel_types': channel_types,
                 'sub_types': sub_types,
-                'profile_id_prefix': self.profile_id_prefix_edit.text().strip() or 'P_SimpleChrome',
+                'profile_id_prefix': self.profile_id_prefix_edit.text().strip() or 'Profile_Simple',
                 'create_on_disk': self.create_on_disk_checkbox.isChecked()
             }
         except ValueError as e:
@@ -1623,9 +1904,9 @@ class CreateMultipleProfilesDialog(QDialog):
                 num_profiles = int(num_profiles_text)
                 start_num = int(start_num_text)
                 
-                if num_profiles < 1 or num_profiles > 50:
-                    self.profile_names_preview.setText("Number of profiles must be 1-50")
-                    self.profile_ids_preview.setText("Number of profiles must be 1-50")
+                if num_profiles < 1 or num_profiles > 250:
+                    self.profile_names_preview.setText("Number of profiles must be 1-250")
+                    self.profile_ids_preview.setText("Number of profiles must be 1-250")
                     return
                 
                 if start_num < 0 or start_num > 9999:
@@ -1639,29 +1920,28 @@ class CreateMultipleProfilesDialog(QDialog):
                 
                 # Simulate the actual profile creation logic for preview
                 existing_profile_ids = {profile.get('profile_id', '') for profile in self.parent().profiles if hasattr(self.parent(), 'profiles')}
-                existing_profile_names = {profile.get('profile', '').lower() for profile in self.parent().profiles if hasattr(self.parent(), 'profiles')}
                 
                 for i in range(num_profiles):
                     current_num = start_num + i
                     
-                    # Generate profile name (matching actual logic)
-                    profile_name = f"{base_name} {current_num}"
-                    if profile_name.lower() in existing_profile_names:
-                        alt_counter = 1
-                        while profile_name.lower() in existing_profile_names:
-                            profile_name = f"{base_name} {current_num} ({alt_counter})"
-                            alt_counter += 1
-                    
-                    # Generate profile ID using custom prefix
-                    profile_id_prefix = self.profile_id_prefix_edit.text().strip() or "P_SimpleChrome"
+                    # Generate unique profile ID using custom prefix (EXACT copy from creation logic)
+                    profile_id_prefix = self.profile_id_prefix_edit.text().strip()
+                    if not profile_id_prefix:
+                        profile_id_prefix = "Profile_Simple"
                     profile_id = f"{profile_id_prefix}_{current_num}"
                     counter = 1
                     while profile_id in existing_profile_ids:
                         profile_id = f"{profile_id_prefix}_{current_num}_{counter}"
                         counter += 1
                     
+                    # Generate profile name (matching actual creation logic)
+                    profile_name = f"{base_name} {current_num}"
+                    
                     preview_names.append(profile_name)
                     preview_ids.append(profile_id)
+                    
+                    # Add to existing sets to prevent duplicates in preview
+                    existing_profile_ids.add(profile_id)
                 
                 # Limit preview to first 10 items to avoid overwhelming the UI
                 if len(preview_names) > 10:
@@ -1798,8 +2078,8 @@ class SamplechromeUI(QWidget):
                 if migrated:
                     self.save_profiles(profiles)
                 
-                # Sort profiles alphabetically by profile name
-                profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+                # Sort profiles using natural sorting (handles numbers correctly)
+                profiles.sort(key=lambda profile: natural_sort_key(profile.get('profile', '')))
                 
                 return profiles
         except (FileNotFoundError, json.JSONDecodeError) as e:
@@ -2648,21 +2928,20 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add create multiple profiles button
-        create_multiple_btn = QPushButton("Create Multiple")
-        create_multiple_btn.setFixedSize(100, 30)
+        create_multiple_btn = QPushButton("Add")
+        create_multiple_btn.setFixedSize(80, 30)
         create_multiple_btn.clicked.connect(self.create_multiple_profiles)
         create_multiple_btn.setStyleSheet("""
             QPushButton {
-                background-color: #28a745;
-                color: white;
-                border: 1px solid #28a745;
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
                 border-radius: 6px;
                 padding: 8px 16px;
                 font-weight: 500;
             }
             QPushButton:hover {
-                background-color: #218838;
-                border-color: #218838;
+                border: 2px solid #28a745;
             }
         """)
         
@@ -2718,8 +2997,8 @@ class SamplechromeUI(QWidget):
             }
         """)
         
-        buttons_layout.addWidget(chrome_btn)
         buttons_layout.addWidget(create_multiple_btn)
+        buttons_layout.addWidget(chrome_btn)
         buttons_layout.addWidget(refresh_btn)
         buttons_layout.addWidget(edit_btn)
         buttons_layout.addWidget(cleanup_btn)
@@ -3094,55 +3373,8 @@ class SamplechromeUI(QWidget):
             if not profile_data:
                 return
             
-            # Show progress dialog if creating many profiles
-            if profile_data['num_profiles'] > 10:
-                progress_dialog = QDialog(self)
-                progress_dialog.setWindowTitle("Creating Profiles")
-                progress_dialog.setFixedSize(400, 150)
-                progress_dialog.setModal(True)
-                
-                layout = QVBoxLayout(progress_dialog)
-                
-                # Progress label
-                progress_label = QLabel(f"Creating {profile_data['num_profiles']} profiles...")
-                progress_label.setStyleSheet("font-size: 14px; font-weight: bold; margin: 10px;")
-                layout.addWidget(progress_label)
-                
-                # Progress bar
-                progress_bar = QtWidgets.QProgressBar()
-                progress_bar.setRange(0, profile_data['num_profiles'])
-                progress_bar.setValue(0)
-                progress_bar.setStyleSheet("""
-                    QProgressBar {
-                        border: 2px solid #cccccc;
-                        border-radius: 5px;
-                        text-align: center;
-                        margin: 10px;
-                    }
-                    QProgressBar::chunk {
-                        background-color: #28a745;
-                        border-radius: 3px;
-                    }
-                """)
-                layout.addWidget(progress_bar)
-                
-                # Status label
-                status_label = QLabel("Initializing...")
-                status_label.setStyleSheet("color: #666666; margin: 10px;")
-                layout.addWidget(status_label)
-                
-                # Show progress dialog
-                progress_dialog.show()
-                QApplication.processEvents()
-                
-                # Create profiles with progress updates
-                created_profiles = self.create_profiles_with_progress(profile_data, progress_bar, status_label)
-                
-                # Close progress dialog
-                progress_dialog.close()
-            else:
-                # Create profiles normally for small numbers
-                created_profiles = self.create_profiles_from_data(profile_data)
+            # Create profiles using unified method
+            created_profiles = self.create_profiles_from_data(profile_data)
             
             if created_profiles:
                 # Check if user wants to create profiles on disk
@@ -3150,7 +3382,7 @@ class SamplechromeUI(QWidget):
                     # Create profiles on disk
                     success, message = self.create_chrome_profiles_on_disk(created_profiles)
                     if success:
-                        CustomMessageBox.show_success(self, "Chrome Profiles Created", 
+                        LargeCustomMessageBox.show_success(self, "Chrome Profiles Created", 
                                                     f"{message}\n\n"
                                                     "You can now launch these profiles from Chrome!")
                     else:
@@ -3159,11 +3391,11 @@ class SamplechromeUI(QWidget):
                 else:
                     # Show success message for profiles created in SimpleChrome only
                     if len(created_profiles) > 5:
-                        CustomMessageBox.show_success(self, "Success", 
+                        LargeCustomMessageBox.show_success(self, "Success", 
                                                     f"Successfully created {len(created_profiles)} new profiles in SimpleChrome!")
                     else:
                         profile_names = [profile['profile'] for profile in created_profiles]
-                        CustomMessageBox.show_success(self, "Success", 
+                        LargeCustomMessageBox.show_success(self, "Success", 
                                                     f"Successfully created profiles in SimpleChrome: {', '.join(profile_names)}")
                 
                 # Refresh the table
@@ -3184,37 +3416,28 @@ class SamplechromeUI(QWidget):
             # Check for potential conflicts
             conflicts = self.check_profile_conflicts(profile_data)
             if conflicts:
-                conflict_message = "Potential conflicts detected:\n\n" + "\n".join(conflicts)
-                if not CustomMessageBox.show_confirmation(self, "Profile Conflicts", 
-                                                        f"{conflict_message}\n\nDo you want to continue anyway?"):
+                conflict_message = "Potential conflicts detected:\n\n\n" + "\n".join(conflicts)
+                if not LargeCustomMessageBox.show_confirmation(self, "Profile Conflicts", 
+                                                        f"{conflict_message}\n\n\nFolder will be renamed to (#)\nDo you want to continue anyway?\n"):
                     return []
             
             # Generate unique profile IDs
             existing_profile_ids = {profile.get('profile_id', '') for profile in self.profiles}
-            existing_profile_names = {profile.get('profile', '').lower() for profile in self.profiles}
             
             created_profiles = []
             current_num = start_num
             
             for i in range(num_profiles):
-                # Generate profile name
-                profile_name = f"{base_name} {current_num}"
-                
-                # Check if profile name already exists
-                if profile_name.lower() in existing_profile_names:
-                    # Try alternative names
-                    alt_counter = 1
-                    while profile_name.lower() in existing_profile_names:
-                        profile_name = f"{base_name} {current_num} ({alt_counter})"
-                        alt_counter += 1
-                
-                # Generate unique profile ID using custom prefix
-                profile_id_prefix = profile_data.get('profile_id_prefix', 'P_SimpleChrome')
+                # Generate unique profile ID using custom prefix (CHECK FIRST)
+                profile_id_prefix = profile_data.get('profile_id_prefix', 'Profile_Simple')
                 profile_id = f"{profile_id_prefix}_{current_num}"
                 counter = 1
                 while profile_id in existing_profile_ids:
                     profile_id = f"{profile_id_prefix}_{current_num}_{counter}"
                     counter += 1
+                
+                # Generate profile name
+                profile_name = f"{base_name} {current_num}"
                 
                 # Create the profile
                 new_profile = {
@@ -3225,19 +3448,18 @@ class SamplechromeUI(QWidget):
                     'profile_id': profile_id,
                     'email': '',
                     'total_channel': '',
-                    'notes': f'Created via Create Multiple Profiles tool on {self.get_current_timestamp()}'
+                    'notes': f'Created by SimpleChrome'
                 }
                 
                 created_profiles.append(new_profile)
                 existing_profile_ids.add(profile_id)
-                existing_profile_names.add(profile_name.lower())
                 current_num += 1
             
             # Add profiles to the main list
             self.profiles.extend(created_profiles)
             
-            # Sort profiles alphabetically
-            self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+            # Sort profiles using natural sorting (handles numbers correctly)
+            self.profiles.sort(key=lambda profile: natural_sort_key(profile.get('profile', '')))
             
             # Save to file
             if self.save_profiles(self.profiles):
@@ -3261,14 +3483,15 @@ class SamplechromeUI(QWidget):
             num_profiles = profile_data['num_profiles']
             base_name = profile_data['base_name']
             start_num = profile_data['start_num']
+            profile_id_prefix = profile_data.get('profile_id_prefix', 'Profile_Simple')
             
-            # Check if any profile names would conflict with existing ones
-            existing_names = {profile.get('profile', '').lower() for profile in self.profiles}
+            # Check if any profile IDs would conflict with existing ones (CHECK FIRST)
+            existing_profile_ids = {profile.get('profile_id', '') for profile in self.profiles}
             
             for i in range(num_profiles):
-                potential_name = f"{base_name} {start_num + i}"
-                if potential_name.lower() in existing_names:
-                    conflicts.append(f"• Profile name '{potential_name}' already exists")
+                potential_profile_id = f"{profile_id_prefix}_{start_num + i}"
+                if potential_profile_id in existing_profile_ids:
+                    conflicts.append(f"• Profile ID '{potential_profile_id}' already exists")
             
             # Check if creating too many profiles
             if num_profiles > 20:
@@ -3289,102 +3512,7 @@ class SamplechromeUI(QWidget):
         from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def create_profiles_with_progress(self, profile_data, progress_bar, status_label):
-        """Create profiles with progress bar updates using modern Chrome 2022+ profile creation"""
-        try:
-            num_profiles = profile_data['num_profiles']
-            base_name = profile_data['base_name']
-            start_num = profile_data['start_num']
-            channel_types = profile_data['channel_types']
-            sub_types = profile_data['sub_types']
-            
-            # Check for potential conflicts
-            status_label.setText("Checking for conflicts...")
-            QApplication.processEvents()
-            
-            conflicts = self.check_profile_conflicts(profile_data)
-            if conflicts:
-                conflict_message = "Potential conflicts detected:\n\n" + "\n".join(conflicts)
-                if not CustomMessageBox.show_confirmation(self, "Profile Conflicts", 
-                                                        f"{conflict_message}\n\nDo you want to continue anyway?"):
-                    return []
-            
-            # Generate unique profile IDs
-            status_label.setText("Generating profile IDs...")
-            QApplication.processEvents()
-            
-            existing_profile_ids = {profile.get('profile_id', '') for profile in self.profiles}
-            existing_profile_names = {profile.get('profile', '').lower() for profile in self.profiles}
-            
-            created_profiles = []
-            current_num = start_num
-            
-            for i in range(num_profiles):
-                # Update progress
-                progress_bar.setValue(i)
-                status_label.setText(f"Creating profile {i+1} of {num_profiles}...")
-                QApplication.processEvents()
-                
-                # Generate profile name
-                profile_name = f"{base_name} {current_num}"
-                
-                # Check if profile name already exists
-                if profile_name.lower() in existing_profile_names:
-                    # Try alternative names
-                    alt_counter = 1
-                    while profile_name.lower() in existing_profile_names:
-                        profile_name = f"{base_name} {current_num} ({alt_counter})"
-                        alt_counter += 1
-                
-                # Generate unique profile ID using custom prefix
-                profile_id_prefix = profile_data.get('profile_id_prefix', 'P_SimpleChrome')
-                profile_id = f"{profile_id_prefix}_{current_num}"
-                counter = 1
-                while profile_id in existing_profile_ids:
-                    profile_id = f"{profile_id_prefix}_{current_num}_{counter}"
-                    counter += 1
-                
-                # Create the profile
-                new_profile = {
-                    'name': '',
-                    'profile': profile_name,
-                    'channel_types': channel_types.copy(),
-                    'sub_types': sub_types.copy(),
-                    'profile_id': profile_id,
-                    'email': '',
-                    'total_channel': '',
-                    'notes': f'Created via Create Multiple Profiles tool on {self.get_current_timestamp()}'
-                }
-                
-                created_profiles.append(new_profile)
-                existing_profile_ids.add(profile_id)
-                existing_profile_names.add(profile_name.lower())
-                current_num += 1
-            
-            # Update progress
-            progress_bar.setValue(num_profiles)
-            status_label.setText("Saving profiles...")
-            QApplication.processEvents()
-            
-            # Add profiles to the main list
-            self.profiles.extend(created_profiles)
-            
-            # Sort profiles alphabetically
-            self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
-            
-            # Save to file
-            if self.save_profiles(self.profiles):
-                return created_profiles
-            else:
-                # Remove the profiles if save failed
-                for profile in created_profiles:
-                    if profile in self.profiles:
-                        self.profiles.remove(profile)
-                return []
-                
-        except Exception as e:
-            print(f"Error creating profiles with progress: {e}")
-            return []
+
 
     def create_chrome_profiles_on_disk(self, profiles):
         """
@@ -3784,8 +3912,8 @@ class SamplechromeUI(QWidget):
             # Update the profile
             self.profiles[original_index].update(edited_data)
             
-            # Sort profiles alphabetically by profile name after editing
-            self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+            # Sort profiles using natural sorting (handles numbers correctly) after editing
+            self.profiles.sort(key=lambda profile: natural_sort_key(profile.get('profile', '')))
             
             # Save to file
             if self.save_profiles(self.profiles):

@@ -2,437 +2,311 @@
   "profiles": [
     {
       "name": "",
-      "profile": "B1 1",
+      "profile": "Profile_Simple 1",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "B1_1",
+      "profile_id": "Profile_Simple (1)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:48:39"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "CA 1",
+      "profile": "Profile_Simple 1",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "CA_1",
+      "profile_id": "Profile_Simple_1",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:51:04"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 1",
+      "profile": "Profile_Simple 10",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_SimpleChrome_1",
+      "profile_id": "Profile_Simple (10)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:05:04"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 1 (1)",
+      "profile": "Profile_Simple 10",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_1",
+      "profile_id": "Profile_Simple_10",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 10",
+      "profile": "Profile_Simple 11",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_10",
+      "profile_id": "Profile_Simple (11)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 11",
+      "profile": "Profile_Simple 11",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_11",
+      "profile_id": "Profile_Simple_11",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 2",
+      "profile": "Profile_Simple 2",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_SimpleChrome_2",
+      "profile_id": "Profile_Simple (2)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:06:15"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 2 (1)",
+      "profile": "Profile_Simple 2",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_2",
+      "profile_id": "Profile_Simple_2",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 3",
+      "profile": "Profile_Simple 3",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_3",
+      "profile_id": "Profile_Simple (3)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 3 (1)",
+      "profile": "Profile_Simple 3",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_SimpleChrome_3_1",
+      "profile_id": "Profile_Simple_3",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:08:23"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 4",
+      "profile": "Profile_Simple 4",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_SimpleChrome_4",
+      "profile_id": "Profile_Simple (4)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:09:24"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 4 (1)",
+      "profile": "Profile_Simple 4",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_4",
+      "profile_id": "Profile_Simple_4",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 5",
+      "profile": "Profile_Simple 5",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_SimpleChrome_5",
+      "profile_id": "Profile_Simple (5)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:09:40"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 5 (1)",
+      "profile": "Profile_Simple 5",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_5",
+      "profile_id": "Profile_Simple_5",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 6",
+      "profile": "Profile_Simple 6",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_6",
+      "profile_id": "Profile_Simple (6)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 7",
+      "profile": "Profile_Simple 6",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_7",
+      "profile_id": "Profile_Simple_6",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 8",
+      "profile": "Profile_Simple 7",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_8",
+      "profile_id": "Profile_Simple (7)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PA 9",
+      "profile": "Profile_Simple 7",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_AA_9",
+      "profile_id": "Profile_Simple_7",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:32:46"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PAAB 1",
+      "profile": "Profile_Simple 8",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_SimpleChrome_1_3",
+      "profile_id": "Profile_Simple (8)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:41:40"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PAC 1",
+      "profile": "Profile_Simple 8",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "PAC_1",
+      "profile_id": "Profile_Simple_8",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:42:09"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PAj 1",
+      "profile": "Profile_Simple 9",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "PAj_1",
+      "profile_id": "Profile_Simple (9)",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:46:05"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
-      "profile": "PB 1",
+      "profile": "Profile_Simple 9",
       "channel_types": [
         "user_custom"
       ],
       "sub_types": [
         "Personal"
       ],
-      "profile_id": "P_SimpleChrome_1_1",
+      "profile_id": "Profile_Simple_9",
       "email": "",
       "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:16:21"
-    },
-    {
-      "name": "",
-      "profile": "PB 2",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "P_SimpleChrome_2_1",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:16:38"
-    },
-    {
-      "name": "",
-      "profile": "PB 3",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "P_SimpleChrome_3",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:17:06"
-    },
-    {
-      "name": "",
-      "profile": "PBA 1",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "P_SimpleChrome_1_4",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:42:56"
-    },
-    {
-      "name": "",
-      "profile": "PBF 1",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "P_SimpleChrome_1_5",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:43:55"
-    },
-    {
-      "name": "",
-      "profile": "PBT 1",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "PBT_1",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:44:04"
-    },
-    {
-      "name": "",
-      "profile": "PC 1",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "PC_1",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:17:40"
-    },
-    {
-      "name": "",
-      "profile": "PD 1",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "P_SimpleChrome_1_2",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:22:23"
-    },
-    {
-      "name": "",
-      "profile": "PD 2",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "P_D_2",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:23:08"
-    },
-    {
-      "name": "",
-      "profile": "PS 1",
-      "channel_types": [
-        "user_custom"
-      ],
-      "sub_types": [
-        "Personal"
-      ],
-      "profile_id": "PS1_1",
-      "email": "",
-      "total_channel": "",
-      "notes": "Created via Create Multiple Profiles tool on 2025-08-27 21:31:26"
+      "notes": "Created by SimpleChrome"
     },
     {
       "name": "",
