@@ -28,7 +28,14 @@ from PyQt6.QtGui import QIcon, QPixmap, QColor
 WINDOW_SIZE = (760, 577)
 WINDOW_TITLE = "Sample chrome UI"
 ICON_PATH = "src/icon.png"
-PROJECT_ROOT = "."
+
+# Get the directory where the executable/script is located
+if getattr(sys, 'frozen', False):
+    # Running as executable (PyInstaller)
+    PROJECT_ROOT = os.path.dirname(sys.executable)
+else:
+    # Running as script
+    PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # Sample stylesheet with correct colors matching chrome
 STYLE_SHEET = """
