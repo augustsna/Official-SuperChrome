@@ -42,6 +42,16 @@ def build_executable():
     main_script = current_dir / "main.py"
     build_dir = current_dir / "build"
     build_dir.mkdir(exist_ok=True)
+    
+    # Try to clean up dist directory if it exists (handle permission errors gracefully)
+    dist_dir = current_dir / "dist" / "SimpleChrome"
+    if dist_dir.exists():
+        try:
+            shutil.rmtree(dist_dir)
+            print("[OK] Cleaned existing dist directory")
+        except (PermissionError, OSError) as e:
+            print(f"[WARN] Could not clean dist directory (in use): {e}")
+            print("[INFO] Proceeding with build anyway...")
 
     # Create enhanced Windows version info file to embed metadata (helps reduce AV false positives)
     version_info_path = build_dir / "version_info.txt"
@@ -101,7 +111,7 @@ VSVersionInfo(
         f"--icon={icon_path}",  # Set the icon
         "--name=SimpleChrome",  # Name of the executable
         "--distpath=dist",  # Output to dist folder; final dir will be dist/SimpleChrome
-        "--clean",  # Clean cache before building
+        # Remove --clean to avoid directory lock issues
         "--noconfirm",  # Don't ask for confirmation
         "--noupx",  # Ensure UPX compression is not used
         "--strip",  # Strip debug symbols to reduce file size and false positives
@@ -195,36 +205,24 @@ def copy_additional_files():
         else:
             print(f"[WARN] {file_name} not found, skipping...")
     
-    # Copy src directory
-    src_dir = current_dir / "src"
-    dst_src_dir = dist_dir / "src"
+    # Create src folder in exe directory and copy src/icon.png into it
+    exe_src_dir = dist_dir / "src"
+    exe_src_dir.mkdir(exist_ok=True)
+    print("[OK] Created src folder in exe directory")
     
-    if src_dir.exists():
-        if dst_src_dir.exists():
-            shutil.rmtree(dst_src_dir)
-        shutil.copytree(src_dir, dst_src_dir)
-        print("[OK] Copied src directory")
+    icon_src = current_dir / "src" / "icon.png"
+    icon_dst = exe_src_dir / "icon.png"  # Put it in the created src folder
+    if icon_src.exists():
+        shutil.copy2(icon_src, icon_dst)
+        print("[OK] Copied src/icon.png to exe/src/icon.png")
     else:
-        print("[WARN] src directory not found, skipping...")
+        print("[WARN] src/icon.png not found, skipping copy...")
 
     # Create antivirus information file
     create_antivirus_readme()
 
-    # Hide resource directory on Windows for a cleaner distribution
-    try:
-        if os.name == "nt":
-            FILE_ATTRIBUTE_HIDDEN = 0x2
-            FILE_ATTRIBUTE_SYSTEM = 0x4
-            for name in ["@src", "src"]:
-                candidate = dist_dir / name
-                if candidate.exists():
-                    result = ctypes.windll.kernel32.SetFileAttributesW(str(candidate), FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)
-                    if result == 0:
-                        print(f"[WARN] Failed to hide directory: {candidate}")
-                    else:
-                        print(f"[OK] Hidden directory: {candidate}")
-    except Exception as e:
-        print(f"[WARN] Error while hiding resource directory: {e}")
+    # Don't hide the src directory - user wants it visible
+    print("[OK] Keeping src directory visible")
 
 def main():
     """Main build function"""
