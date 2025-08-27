@@ -1256,9 +1256,9 @@ class SamplechromeUI(QWidget):
         if deleted_profiles:
             # Show confirmation dialog with list of profiles to be deleted
             profile_names = [p.get('profile', '') for p in deleted_profiles]
-            confirmation_message = f"{len(deleted_profiles)} profiles will be removed:\n\n"
-            confirmation_message += f"{' , '.join(profile_names)}\n\n"
-            confirmation_message += "All data will be deleted\nThis action cannot be undone.\n\n"
+            confirmation_message = f"{len(deleted_profiles)} profiles will be removed:\n\n\n"
+            confirmation_message += f"{' , '.join(profile_names)}\n\n\n"
+            confirmation_message += "All data will be deleted\nThis action cannot be undone.\n"
             
             # Create custom confirmation dialog
             reply = CustomMessageBox.show_confirmation(self, "Confirm Cleanup", confirmation_message)
