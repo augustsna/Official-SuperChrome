@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['C:\\Users\\Rome\\Documents\\github\\SimpleChrome\\main.py'],
+    ['C:\\Users\\Rome\\Documents\\GitHub\\Official-SimpleChrome\\main.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -32,8 +32,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version='C:\\Users\\Rome\\Documents\\github\\SimpleChrome\\build\\version_info.txt',
-    icon=['C:\\Users\\Rome\\Documents\\github\\SimpleChrome\\src\\icon.png'],
+    version='C:\\Users\\Rome\\Documents\\GitHub\\Official-SimpleChrome\\build\\version_info.txt',
+    icon=['C:\\Users\\Rome\\Documents\\GitHub\\Official-SimpleChrome\\src\\icon.png'],
 )
 coll = COLLECT(
     exe,
