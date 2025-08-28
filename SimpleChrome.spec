@@ -21,7 +21,7 @@ exe = EXE(
     a.scripts,
     [('O', None, 'OPTION'), ('O', None, 'OPTION')],
     exclude_binaries=True,
-    name='SuperChrome',
+    name='SimpleChrome',
     debug=False,
     bootloader_ignore_signals=False,
     strip=True,
@@ -42,5 +42,5 @@ coll = COLLECT(
     strip=True,
     upx=False,
     upx_exclude=[],
-    name='SuperChrome',
+    name='SimpleChrome',
 )

@@ -1,5 +1,5 @@
 """
-SuperChrome - Chrome Profile Management Tool
+SimpleChrome - Chrome Profile Management Tool
 ============================================
 
 Chrome Compatibility: This application ONLY supports modern Chrome versions (Chrome 80+)
@@ -15,7 +15,6 @@ import sys
 import json
 import platform
 import re
-import psutil
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -27,61 +26,9 @@ from PyQt6.QtGui import QIcon, QPixmap, QColor
 
 # Sample configuration constants
 WINDOW_SIZE = (760, 577)
-WINDOW_TITLE = "SuperChrome - Chrome Profile Manager"
+WINDOW_TITLE = "Sample chrome UI"
 ICON_PATH = "src/icon.png"
 PROJECT_ROOT = "."
-
-def is_chrome_running():
-    """Check if Chrome browser is currently running"""
-    try:
-        for proc in psutil.process_iter(['pid', 'name']):
-            try:
-                proc_name = proc.info['name'].lower()
-                # Exclude SuperChrome.exe and chromedriver, but include actual Chrome browser
-                if ('chrome' in proc_name and 
-                    'chromedriver' not in proc_name and 
-                    'superchrome' not in proc_name):
-                    return True
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
-        return False
-    except Exception:
-        return False
-
-def check_chrome_running_and_warn(parent):
-    """Check if Chrome is running and show warning dialog if it is"""
-    if is_chrome_running():
-        # Show warning dialog
-        warning_message = ("Chrome is currently running!\n\n"
-                          "Please close all Chrome windows and tabs before creating profiles.\n\n"
-                          "This ensures that profile creation is safe and won't cause conflicts.")
-        
-        # Show warning with option to continue or retry
-        result = CustomMessageBox.show_confirmation(
-            parent, 
-            "Chrome is Running", 
-            warning_message
-        )
-        
-        if result:
-            # User clicked "Yes" - check again if Chrome is still running
-            if is_chrome_running():
-                # Chrome is still running, show error
-                CustomMessageBox.show_error(
-                    parent,
-                    "Chrome Still Running",
-                    "Chrome is still running. Please close all Chrome windows and try again."
-                )
-                return False
-            else:
-                # Chrome is now closed, allow profile creation
-                return True
-        else:
-            # User clicked "No" - don't proceed
-            return False
-    else:
-        # Chrome is not running, allow profile creation
-        return True
 
 # Sample stylesheet with correct colors matching chrome
 STYLE_SHEET = """
@@ -1260,11 +1207,11 @@ class EditProfileDialog(QDialog):
             # Generate preview
             preview_names = []
             for i in range(min(num_profiles, 5)):  # Show max 5 names
-                preview_names.append(f"{base_name}_{start_num + i}")
+                preview_names.append(f"{base_name} {start_num + i}")
             
             if num_profiles > 5:
                 preview_names.append("...")
-                preview_names.append(f"{base_name}_{start_num + num_profiles - 1}")
+                preview_names.append(f"{base_name} {start_num + num_profiles - 1}")
             
             preview_text = ", ".join(preview_names)
             self.preview_text.setText(preview_text)
@@ -1348,7 +1295,7 @@ class CreateMultipleProfilesDialog(QDialog):
         
         # Base profile name
         self.base_name_edit = QLineEdit()
-        self.base_name_edit.setText("Profile_Super")
+        self.base_name_edit.setText("Profile_Simple")
         self.base_name_edit.setPlaceholderText("Enter base name for profiles")
         self.base_name_edit.setStyleSheet("""
             QLineEdit {
@@ -1377,7 +1324,7 @@ class CreateMultipleProfilesDialog(QDialog):
         
         # Profile ID Prefix
         self.profile_id_prefix_edit = QLineEdit()
-        self.profile_id_prefix_edit.setText("Profile_Super")
+        self.profile_id_prefix_edit.setText("Profile_Simple")
         self.profile_id_prefix_edit.setPlaceholderText("Enter profile ID prefix")
         self.profile_id_prefix_edit.setStyleSheet("""
             QLineEdit {
@@ -1687,7 +1634,7 @@ class CreateMultipleProfilesDialog(QDialog):
         profile_ids_label = QLabel("Profile IDs:")
         profile_ids_label.setStyleSheet("font-weight: 500; color: #555555; margin-top: 5px;")
         
-        self.profile_ids_preview = QLabel("Profile_Super 1, Profile_Super 2, Profile_Super 3...")
+        self.profile_ids_preview = QLabel("Profile_Simple 1, Profile_Simple 2, Profile_Simple 3...")
         self.profile_ids_preview.setStyleSheet("""
             color: #666666;
             font-style: italic;
@@ -1869,7 +1816,7 @@ class CreateMultipleProfilesDialog(QDialog):
                 'start_num': start_num,
                 'channel_types': channel_types,
                 'sub_types': sub_types,
-                'profile_id_prefix': self.profile_id_prefix_edit.text().strip() or 'Profile_Super',
+                'profile_id_prefix': self.profile_id_prefix_edit.text().strip() or 'Profile_Simple',
                 'create_on_disk': self.create_on_disk_checkbox.isChecked()
             }
         except ValueError as e:
@@ -1980,7 +1927,7 @@ class CreateMultipleProfilesDialog(QDialog):
                     # Generate unique profile ID using custom prefix (EXACT copy from creation logic)
                     profile_id_prefix = self.profile_id_prefix_edit.text().strip()
                     if not profile_id_prefix:
-                        profile_id_prefix = "Profile_Super"
+                        profile_id_prefix = "Profile_Simple"
                     profile_id = f"{profile_id_prefix}_{current_num}"
                     counter = 1
                     while profile_id in existing_profile_ids:
@@ -1988,7 +1935,7 @@ class CreateMultipleProfilesDialog(QDialog):
                         counter += 1
                     
                     # Generate profile name (matching actual creation logic)
-                    profile_name = f"{base_name}_{current_num}"
+                    profile_name = f"{base_name} {current_num}"
                     
                     preview_names.append(profile_name)
                     preview_ids.append(profile_id)
@@ -2420,7 +2367,7 @@ class SamplechromeUI(QWidget):
             title_icon.setStyleSheet("font-size: 45px; background-color: transparent;")
         
         # Title label
-        title_label = QLabel("Super Chrome")
+        title_label = QLabel("Simple Chrome")
         title_label.setStyleSheet("font-size: 28px; font-weight: bold; background-color: transparent; color: #333333;")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
@@ -3444,10 +3391,6 @@ class SamplechromeUI(QWidget):
 
     def create_multiple_profiles(self):
         """Create multiple Chrome profiles with custom settings"""
-        # Check if Chrome is running before proceeding
-        if not check_chrome_running_and_warn(self):
-            return
-            
         # Show the create multiple profiles dialog
         dialog = CreateMultipleProfilesDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
@@ -3470,16 +3413,16 @@ class SamplechromeUI(QWidget):
                                                     "You can now launch these profiles from Chrome!")
                     else:
                         CustomMessageBox.show_warning(self, "Partial Success", 
-                                                    f"Profiles created in SuperChrome but failed to create on disk:\n{message}")
+                                                    f"Profiles created in SimpleChrome but failed to create on disk:\n{message}")
                 else:
-                    # Show success message for profiles created in SuperChrome only
+                    # Show success message for profiles created in SimpleChrome only
                     if len(created_profiles) > 5:
                         LargeCustomMessageBox.show_success(self, "Success", 
-                                                    f"Successfully created {len(created_profiles)} new profiles in SuperChrome!")
+                                                    f"Successfully created {len(created_profiles)} new profiles in SimpleChrome!")
                     else:
                         profile_names = [profile['profile'] for profile in created_profiles]
                         LargeCustomMessageBox.show_success(self, "Success", 
-                                                    f"Successfully created profiles in SuperChrome: {', '.join(profile_names)}")
+                                                    f"Successfully created profiles in SimpleChrome: {', '.join(profile_names)}")
                 
                 # Refresh the table
                 self.populate_profiles_table(skip_validation=True)
@@ -3512,7 +3455,7 @@ class SamplechromeUI(QWidget):
             
             for i in range(num_profiles):
                 # Generate unique profile ID using custom prefix (CHECK FIRST)
-                profile_id_prefix = profile_data.get('profile_id_prefix', 'Profile_Super')
+                profile_id_prefix = profile_data.get('profile_id_prefix', 'Profile_Simple')
                 profile_id = f"{profile_id_prefix}_{current_num}"
                 counter = 1
                 while profile_id in existing_profile_ids:
@@ -3531,7 +3474,7 @@ class SamplechromeUI(QWidget):
                     'profile_id': profile_id,
                     'email': '',
                     'total_channel': '',
-                    'notes': f'SuperChrome'
+                    'notes': f'SimpleChrome'
                 }
                 
                 created_profiles.append(new_profile)
@@ -3566,7 +3509,7 @@ class SamplechromeUI(QWidget):
             num_profiles = profile_data['num_profiles']
             base_name = profile_data['base_name']
             start_num = profile_data['start_num']
-            profile_id_prefix = profile_data.get('profile_id_prefix', 'Profile_Super')
+            profile_id_prefix = profile_data.get('profile_id_prefix', 'Profile_Simple')
             
             # Check if any profile IDs would conflict with existing ones (CHECK FIRST)
             existing_profile_ids = {profile.get('profile_id', '') for profile in self.profiles}
@@ -3608,10 +3551,6 @@ class SamplechromeUI(QWidget):
         ✅ Local update state so Chrome recognizes profiles immediately
         """
         try:
-            # Check if Chrome is running before creating profiles on disk
-            if is_chrome_running():
-                return False, "Chrome is currently running. Please close Chrome before creating profiles on disk."
-            
             # ✅ Simple error handling - determine Chrome user data directory
             system = platform.system()
             if system == "Windows":
