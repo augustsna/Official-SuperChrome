@@ -38,7 +38,7 @@ def build_executable():
     
     # Get the current directory
     current_dir = Path.cwd()
-    icon_path = current_dir / "src" / "icon2.png"
+    icon_path = current_dir / "src" / "icon.png"
     main_script = current_dir / "main.py"
     build_dir = current_dir / "build"
     build_dir.mkdir(exist_ok=True)
