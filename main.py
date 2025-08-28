@@ -3400,8 +3400,8 @@ class SamplechromeUI(QWidget):
             3: "Channel type",
             4: "Sub type",
             5: "Email",
-            6: "Notes",
-            7: "Amount",
+            6: "Amount",
+            7: "Notes",
             8: "Profile ID"
         }
         
