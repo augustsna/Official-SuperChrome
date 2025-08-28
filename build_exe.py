@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build script for SimpleChrome executable with logo
+Build script for SuperChrome executable with logo
 Uses PyInstaller to create a standalone executable
 """
 
@@ -44,7 +44,7 @@ def build_executable():
     build_dir.mkdir(exist_ok=True)
     
     # Try to clean up dist directory if it exists (handle permission errors gracefully)
-    dist_dir = current_dir / "dist" / "SimpleChrome"
+    dist_dir = current_dir / "dist" / "SuperChrome"
     if dist_dir.exists():
         try:
             shutil.rmtree(dist_dir)
@@ -72,16 +72,16 @@ VSVersionInfo(
   kids=[
     StringFileInfo([
       StringTable('040904B0', [
-        StringStruct('CompanyName', 'SimpleChrome Development Team'),
+        StringStruct('CompanyName', 'SuperChrome Development Team'),
         StringStruct('FileDescription', 'Chrome Profile Management Tool - Legitimate Application'),
         StringStruct('FileVersion', '1.0.0.0'),
-        StringStruct('InternalName', 'SimpleChrome'),
-        StringStruct('LegalCopyright', 'Copyright (c) 2025 SimpleChrome Development Team. All rights reserved.'),
-        StringStruct('OriginalFilename', 'SimpleChrome.exe'),
-        StringStruct('ProductName', 'SimpleChrome Profile Manager'),
+        StringStruct('InternalName', 'SuperChrome'),
+        StringStruct('LegalCopyright', 'Copyright (c) 2025 SuperChrome Development Team. All rights reserved.'),
+        StringStruct('OriginalFilename', 'SuperChrome.exe'),
+        StringStruct('ProductName', 'SuperChrome Profile Manager'),
         StringStruct('ProductVersion', '1.0.0.0'),
         StringStruct('Comments', 'Open source Chrome profile management utility built with PyQt6'),
-        StringStruct('LegalTrademarks', 'SimpleChrome is an independent project, not affiliated with Google Chrome')
+        StringStruct('LegalTrademarks', 'SuperChrome is an independent project, not affiliated with Google Chrome')
       ])
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
@@ -109,8 +109,8 @@ VSVersionInfo(
         "--onedir",  # Prefer onedir to reduce AV false positives
         "--windowed",  # Don't show console window
         f"--icon={icon_path}",  # Set the icon
-        "--name=SimpleChrome",  # Name of the executable
-        "--distpath=dist",  # Output to dist folder; final dir will be dist/SimpleChrome
+        "--name=SuperChrome",  # Name of the executable
+        "--distpath=dist",  # Output to dist folder; final dir will be dist/SuperChrome
         # Remove --clean to avoid directory lock issues
         "--noconfirm",  # Don't ask for confirmation
         "--noupx",  # Ensure UPX compression is not used
@@ -137,14 +137,14 @@ VSVersionInfo(
 def create_antivirus_readme():
     """Create a README file explaining antivirus false positives"""
     current_dir = Path.cwd()
-    dist_dir = current_dir / "dist" / "SimpleChrome"
+    dist_dir = current_dir / "dist" / "SuperChrome"
     readme_path = dist_dir / "ANTIVIRUS_README.txt"
     
     readme_content = """
 ANTIVIRUS FALSE POSITIVE INFORMATION
 ===================================
 
-If your antivirus software flags SimpleChrome.exe as suspicious, this is likely a 
+If your antivirus software flags SuperChrome.exe as suspicious, this is likely a 
 FALSE POSITIVE. This is common with PyInstaller-generated executables.
 
 WHY THIS HAPPENS:
@@ -159,7 +159,7 @@ THIS APPLICATION IS SAFE:
 - Source code available for inspection
 
 WHAT TO DO:
-1. Add SimpleChrome.exe to your antivirus whitelist/exclusions
+1. Add SuperChrome.exe to your antivirus whitelist/exclusions
 2. Report false positive to your antivirus vendor
 3. Verify file integrity by checking the embedded version information
 
@@ -172,7 +172,7 @@ TECHNICAL DETAILS:
 For support or to report issues, visit the project repository.
 
 Generated: 2025
-SimpleChrome Development Team
+SuperChrome Development Team
 """
     
     try:
@@ -186,7 +186,7 @@ def copy_additional_files():
     print("Copying additional files...")
     
     current_dir = Path.cwd()
-    dist_dir = current_dir / "dist" / "SimpleChrome"
+    dist_dir = current_dir / "dist" / "SuperChrome"
     
     # Files to copy
     files_to_copy = [
@@ -227,7 +227,7 @@ def copy_additional_files():
 def main():
     """Main build function"""
     print("=" * 50)
-    print("SimpleChrome Executable Builder")
+    print("SuperChrome Executable Builder")
     print("=" * 50)
     
     # Check and install PyInstaller if needed
@@ -247,17 +247,17 @@ def main():
     print("\n" + "=" * 50)
     print("Build completed successfully!")
     print("=" * 50)
-    dist_dir = Path.cwd() / "dist" / "SimpleChrome"
-    exe_path = dist_dir / "SimpleChrome.exe"
+    dist_dir = Path.cwd() / "dist" / "SuperChrome"
+    exe_path = dist_dir / "SuperChrome.exe"
     print(f"Executable location: {exe_path}")
     print(f"Additional files have been copied to the {dist_dir} directory.")
     print("\nTo run the application:")
-    print("1. Navigate to the dist/SimpleChrome directory")
-    print("2. Double-click SimpleChrome.exe")
+    print("1. Navigate to the dist/SuperChrome directory")
+    print("2. Double-click SuperChrome.exe")
     print("\nIMPORTANT - Antivirus False Positives:")
     print("- If your antivirus flags the executable, it's likely a FALSE POSITIVE")
     print("- This is common with PyInstaller applications")
-    print("- Add SimpleChrome.exe to your antivirus exclusions/whitelist")
+    print("- Add SuperChrome.exe to your antivirus exclusions/whitelist")
     print("- See ANTIVIRUS_README.txt in the dist folder for detailed information")
     print("\nNote: The first run may take a few seconds to start.")
     

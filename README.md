@@ -1,4 +1,4 @@
-# SimpleChrome
+# SuperChrome
 
 A PyQt6-based application for managing Chrome browser profiles with a modern, Chrome-like interface.
 
@@ -47,7 +47,7 @@ If you prefer to build manually:
 
 2. **Build the executable**:
    ```bash
-   pyinstaller --onefile --windowed --icon=src/icon.png --name=SimpleChrome --clean --noconfirm main.py
+   pyinstaller --onefile --windowed --icon=src/icon.png --name=SuperChrome --clean --noconfirm main.py
    ```
 
 3. **Copy additional files** to the `dist` directory:
@@ -65,12 +65,12 @@ python main.py
 
 ### From Executable
 1. Navigate to the `dist` directory
-2. Double-click `SimpleChrome.exe`
+2. Double-click `SuperChrome.exe`
 
 ## File Structure
 
 ```
-SimpleChrome/
+SuperChrome/
 ├── main.py              # Main application file
 ├── build_exe.py         # Build script for executable
 ├── requirements.txt     # Python dependencies
@@ -90,7 +90,7 @@ The application uses `config.json` for configuration:
   "channel_types": ["user_custom", "Chrome Profile", "Standard", "Premium", "Basic"],
   "sub_types": ["Personal", "Business", "Gaming", "Development", "Testing", "Marketing", "Education"],
   "app_settings": {
-    "window_title": "Simple Chrome",
+    "window_title": "Super Chrome",
     "window_size": [760, 577],
     "icon_path": "src/icon.png"
   }
