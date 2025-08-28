@@ -1710,10 +1710,11 @@ class CreateMultipleProfilesDialog(QDialog):
         form_layout.addRow("Channel type:", self.channel_types_container)
         form_layout.addRow("Sub type:", self.sub_types_container)
         form_layout.addRow("", self.create_on_disk_checkbox)
-        form_layout.addRow(preview_label, profile_names_label)
-        form_layout.addRow("", self.profile_names_preview)
         form_layout.addRow("", profile_ids_label)
         form_layout.addRow("", self.profile_ids_preview)
+        form_layout.addRow("", profile_names_label)
+        form_layout.addRow("", self.profile_names_preview)
+
         
         layout.addLayout(form_layout)
         
@@ -1988,7 +1989,7 @@ class CreateMultipleProfilesDialog(QDialog):
                         counter += 1
                     
                     # Generate profile name (matching actual creation logic)
-                    profile_name = f"{base_name}_{current_num}"
+                    profile_name = f"{base_name} {current_num}"
                     
                     preview_names.append(profile_name)
                     preview_ids.append(profile_id)
@@ -3564,25 +3565,16 @@ class SamplechromeUI(QWidget):
         
         try:
             num_profiles = profile_data['num_profiles']
-            base_name = profile_data['base_name']
-            start_num = profile_data['start_num']
             profile_id_prefix = profile_data.get('profile_id_prefix', 'Profile_Super')
+            start_num = profile_data['start_num']
             
-            # Check if any profile IDs would conflict with existing ones (CHECK FIRST)
+            # Check if any profile IDs would conflict with existing ones (ONLY CHECK)
             existing_profile_ids = {profile.get('profile_id', '') for profile in self.profiles}
             
             for i in range(num_profiles):
                 potential_profile_id = f"{profile_id_prefix}_{start_num + i}"
                 if potential_profile_id in existing_profile_ids:
                     conflicts.append(f"• Profile ID '{potential_profile_id}' already exists")
-            
-            # Check if creating too many profiles
-            if num_profiles > 20:
-                conflicts.append(f"• Creating {num_profiles} profiles may take some time")
-            
-            # Check if starting number is very high
-            if start_num > 1000:
-                conflicts.append(f"• Starting number {start_num} is quite high")
             
             return conflicts
             
