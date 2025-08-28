@@ -2093,8 +2093,33 @@ class SamplechromeUI(QWidget):
                     'window_title': 'Sample chrome UI',
                     'window_size': [760, 577],
                     'icon_path': 'src/icon.png'
+                },
+                'sorting_preferences': {
+                    'sort_field': 'Profile',
+                    'sort_order': 'A-Z'
                 }
             }
+
+    def save_sorting_preferences(self):
+        """Save current sorting preferences to config.json"""
+        try:
+            # Load current config
+            with open('config.json', 'r', encoding='utf-8') as file:
+                config = json.load(file)
+            
+            # Update sorting preferences
+            if 'sorting_preferences' not in config:
+                config['sorting_preferences'] = {}
+            
+            config['sorting_preferences']['sort_field'] = self.sort_field_dropdown.currentText()
+            config['sorting_preferences']['sort_order'] = self.sort_order_dropdown.currentText()
+            
+            # Save updated config
+            with open('config.json', 'w', encoding='utf-8') as file:
+                json.dump(config, file, indent=2, ensure_ascii=False)
+                
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error saving sorting preferences: {e}")
 
     def load_profiles(self):
         """Load profiles from profile.json file"""
@@ -2604,7 +2629,9 @@ class SamplechromeUI(QWidget):
             "Amount",
             "Profile ID"
         ])
-        self.sort_field_dropdown.setCurrentText("Profile")
+        # Set sort field from saved preferences or default
+        saved_sort_field = self.config.get('sorting_preferences', {}).get('sort_field', 'Profile')
+        self.sort_field_dropdown.setCurrentText(saved_sort_field)
         self.sort_field_dropdown.setFixedSize(120, 32)
         self.sort_field_dropdown.currentTextChanged.connect(self.sort_profiles_table)
         self.sort_field_dropdown.setStyleSheet("""
@@ -2656,7 +2683,9 @@ class SamplechromeUI(QWidget):
             "A-Z",
             "Z-A"
         ])
-        self.sort_order_dropdown.setCurrentText("A-Z")
+        # Set sort order from saved preferences or default
+        saved_sort_order = self.config.get('sorting_preferences', {}).get('sort_order', 'A-Z')
+        self.sort_order_dropdown.setCurrentText(saved_sort_order)
         self.sort_order_dropdown.setFixedSize(120, 32)
         self.sort_order_dropdown.currentTextChanged.connect(self.sort_profiles_table)
         self.sort_order_dropdown.setStyleSheet("""
@@ -2933,6 +2962,9 @@ class SamplechromeUI(QWidget):
         
         # Populate table with profile data
         self.populate_profiles_table()
+        
+        # Apply saved sorting preferences
+        self.sort_profiles_table()
         
         # Ensure the table scrolls properly from the first data row
         if self.profiles_table.rowCount() > 0:
@@ -3296,6 +3328,9 @@ class SamplechromeUI(QWidget):
             else:
                 # Custom sorting to handle empty values last for all columns
                 self.custom_sort_column(column_index, reverse_order)
+        
+        # Save sorting preferences after sorting
+        self.save_sorting_preferences()
 
     def custom_sort_profile_id_column(self, reverse_order=False):
         """Custom sort for Profile ID column using natural sorting"""
