@@ -2379,10 +2379,15 @@ class SamplechromeUI(QWidget):
         self.resize(window_size[0], window_size[1])
         self.setStyleSheet(STYLE_SHEET)
         
-        # Set window icon
-        icon_path = os.path.join(PROJECT_ROOT, ICON_PATH)
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        # Set window icon (taskbar icon)
+        taskbar_icon_path = os.path.join(PROJECT_ROOT, "src/icon2.png")
+        if os.path.exists(taskbar_icon_path):
+            self.setWindowIcon(QIcon(taskbar_icon_path))
+        else:
+            # Fallback to default icon if icon2.png doesn't exist
+            icon_path = os.path.join(PROJECT_ROOT, ICON_PATH)
+            if os.path.exists(icon_path):
+                self.setWindowIcon(QIcon(icon_path))
         
         # Add keyboard shortcuts
         from PyQt6.QtGui import QShortcut, QKeySequence
@@ -2410,7 +2415,7 @@ class SamplechromeUI(QWidget):
         title_widget.setFixedHeight(100)
         title_widget.setStyleSheet("background-color: transparent;")
         
-        # Title icon
+        # Title icon (keep original icon for title area)
         title_icon = QLabel()
         icon_path = os.path.join(PROJECT_ROOT, ICON_PATH)
         if os.path.exists(icon_path):

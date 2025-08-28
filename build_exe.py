@@ -210,6 +210,7 @@ def copy_additional_files():
     exe_src_dir.mkdir(exist_ok=True)
     print("[OK] Created src folder in exe directory")
     
+    # Copy icon.png
     icon_src = current_dir / "src" / "icon.png"
     icon_dst = exe_src_dir / "icon.png"  # Put it in the created src folder
     if icon_src.exists():
@@ -217,6 +218,15 @@ def copy_additional_files():
         print("[OK] Copied src/icon.png to exe/src/icon.png")
     else:
         print("[WARN] src/icon.png not found, skipping copy...")
+    
+    # Copy icon2.png
+    icon2_src = current_dir / "src" / "icon2.png"
+    icon2_dst = exe_src_dir / "icon2.png"
+    if icon2_src.exists():
+        shutil.copy2(icon2_src, icon2_dst)
+        print("[OK] Copied src/icon2.png to exe/src/icon2.png")
+    else:
+        print("[WARN] src/icon2.png not found, skipping copy...")
 
     # Create antivirus information file
     create_antivirus_readme()
