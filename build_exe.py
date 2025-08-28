@@ -38,7 +38,7 @@ def build_executable():
     
     # Get the current directory
     current_dir = Path.cwd()
-    icon_path = current_dir / "src" / "icon.png"
+    icon_path = current_dir / "src" / "icon2.png"
     main_script = current_dir / "main.py"
     build_dir = current_dir / "build"
     build_dir.mkdir(exist_ok=True)
@@ -73,7 +73,7 @@ VSVersionInfo(
     StringFileInfo([
       StringTable('040904B0', [
         StringStruct('CompanyName', 'SuperChrome Development Team'),
-        StringStruct('FileDescription', 'Chrome Profile Management Tool - Legitimate Application'),
+        StringStruct('FileDescription', 'SuperChrome'),
         StringStruct('FileVersion', '1.0.0.0'),
         StringStruct('InternalName', 'SuperChrome'),
         StringStruct('LegalCopyright', 'Copyright (c) 2025 SuperChrome Development Team. All rights reserved.'),
