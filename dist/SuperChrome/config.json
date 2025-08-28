@@ -15,7 +15,14 @@
   ],
   "app_settings": {
     "window_title": "Chrome Manager",
-    "window_size": [600, 500],
+    "window_size": [
+      600,
+      500
+    ],
     "icon_path": "src/icon.png"
+  },
+  "sorting_preferences": {
+    "sort_field": "Profile",
+    "sort_order": "A-Z"
   }
 }
