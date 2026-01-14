@@ -20,7 +20,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QGroupBox, QFormLayout, QCheckBox, QComboBox,
-    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QGridLayout
+    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QGridLayout, QMenu
 )
 from PyQt6.QtCore import Qt, QSettings, QSize, QTimer
 from PyQt6.QtGui import QIcon, QPixmap, QColor
@@ -2542,6 +2542,9 @@ class SamplechromeUI(QWidget):
         self.search_input.setPlaceholderText("Search names...")
         self.search_input.setFixedSize(210, 32)
         self.search_input.textChanged.connect(self.filter_profiles_table)
+        # Custom styled context menu for right-click
+        self.search_input.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.search_input.customContextMenuRequested.connect(self.show_search_context_menu)
         self.search_input.setStyleSheet("""
             QLineEdit {
                 border: 1px solid #cccccc;
@@ -2557,6 +2560,25 @@ class SamplechromeUI(QWidget):
             }
             QLineEdit::placeholder {
                 color: #999999;
+            }
+        """)
+
+        # Clear search button
+        self.clear_search_button = QPushButton("Clear")
+        self.clear_search_button.setFixedSize(70, 32)
+        self.clear_search_button.clicked.connect(self.clear_search)
+        # Style to visually match the search controls row
+        self.clear_search_button.setStyleSheet("""
+            QPushButton {
+                background-color: #ffffff;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 13px;
+                color: #333333;
+            }
+            QPushButton:hover {
+                background-color: #f5f5f5;
             }
         """)
         
@@ -2815,11 +2837,12 @@ class SamplechromeUI(QWidget):
             }
         """)
         search_row1 = QHBoxLayout()
-        search_row1.addStretch()
+        search_row1.addSpacing(139)
         search_row1.addWidget(search_label)
         search_row1.addWidget(self.search_scope)
-        search_row1.addSpacing(20)
+        search_row1.addSpacing(18)
         search_row1.addWidget(self.search_input)
+        search_row1.addWidget(self.clear_search_button)
         search_row1.addStretch()
         
         # Second row - Channel Type and Sub Type filters
@@ -3291,6 +3314,49 @@ class SamplechromeUI(QWidget):
             
             # Show/hide row based on all filters
             self.profiles_table.setRowHidden(row, not (channel_matches and sub_type_matches and search_matches))
+
+    def clear_search(self):
+        """Clear the search input and reset the table filter"""
+        self.search_input.clear()
+        # filter_profiles_table will be triggered by textChanged signal; call explicitly for safety
+        self.filter_profiles_table()
+
+    def show_search_context_menu(self, pos):
+        """Show a styled right-click context menu for the search bar"""
+        menu = QMenu(self)
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: #ffffff;
+                border: 1px solid #d0d0d0;
+                border-radius: 0px;
+                padding: 4px 0;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 12px;
+                color: #333333;
+                min-width: 120px;
+            }
+            QMenu::item {
+                padding: 4px 16px;
+            }
+            QMenu::item:selected {
+                background-color: #e7f1ff;
+                color: #000000;
+            }
+            QMenu::separator {
+                height: 1px;
+                margin: 6px 16px;
+                background: #e0e0e0;
+            }
+        """)
+
+        menu.addAction("Cut", self.search_input.cut)
+        menu.addAction("Copy", self.search_input.copy)
+        menu.addAction("Paste", self.search_input.paste)
+        menu.addSeparator()
+        menu.addAction("Select All", self.search_input.selectAll)
+        menu.addAction("Clear", self.clear_search)
+
+        menu.exec(self.search_input.mapToGlobal(pos))
 
     def sort_profiles_table(self):
         """Sort the profiles table based on selected field and order"""
