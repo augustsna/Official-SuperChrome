@@ -2624,6 +2624,7 @@ class SamplechromeUI(QWidget):
                 background-color: #ffffff;
                 selection-background-color: #47a4ff;
                 selection-color: #ffffff;
+                min-width: 120px;
             }
         """)
         
@@ -2684,6 +2685,7 @@ class SamplechromeUI(QWidget):
                 background-color: #ffffff;
                 selection-background-color: #47a4ff;
                 selection-color: #ffffff;
+                min-width: 120px;
             }
         """)
         
@@ -2738,6 +2740,7 @@ class SamplechromeUI(QWidget):
                 background-color: #ffffff;
                 selection-background-color: #47a4ff;
                 selection-color: #ffffff;
+                min-width: 120px;
             }
         """)
         
@@ -2786,6 +2789,7 @@ class SamplechromeUI(QWidget):
                 background-color: #ffffff;
                 selection-background-color: #47a4ff;
                 selection-color: #ffffff;
+                min-width: 120px;
             }
         """)
         
@@ -2834,6 +2838,7 @@ class SamplechromeUI(QWidget):
                 background-color: #ffffff;
                 selection-background-color: #47a4ff;
                 selection-color: #ffffff;
+                min-width: 120px;
             }
         """)
         search_row1 = QHBoxLayout()
