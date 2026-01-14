@@ -2842,7 +2842,8 @@ class SamplechromeUI(QWidget):
             }
         """)
         search_row1 = QHBoxLayout()
-        search_row1.addSpacing(139)
+        search_row1.addStretch()
+        search_row1.addSpacing(78)
         search_row1.addWidget(search_label)
         search_row1.addWidget(self.search_scope)
         search_row1.addSpacing(18)
@@ -2931,7 +2932,7 @@ class SamplechromeUI(QWidget):
                 border-radius: 0px;
                 gridline-color: #f0f0f0;
                 outline: none;
-                selection-background-color: rgba(100, 181, 246, 0.15);
+                selection-background-color: #E8F4FD;
                 selection-color: #333333;
                 gridline-color: #e0e0e0;
             }
@@ -2944,9 +2945,9 @@ class SamplechromeUI(QWidget):
                 background-color: #f8f9fa;
             }
             QTableWidget::item:selected {
-                background-color: rgba(100, 181, 246, 0.15);
+                background-color: #E8F4FD;
                 color: #333333;
-                border-bottom: 1px solid rgba(100, 181, 246, 0.15);
+                border-bottom: 1px solid #E8F4FD;
             }
             QHeaderView::section {
                 background-color: #f8f9fa;
@@ -2980,7 +2981,7 @@ class SamplechromeUI(QWidget):
                 font-size: 12px;
             }
             QTableWidget::item[column="0"]:selected {
-                background-color: rgba(100, 181, 246, 0.15);
+                background-color: #E8F4FD;
                 color: #333333;
             }
         """)
