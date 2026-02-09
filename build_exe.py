@@ -135,51 +135,101 @@ VSVersionInfo(
         return False
 
 def create_antivirus_readme():
-    """Create a README file explaining antivirus false positives"""
+    """Create a README file explaining antivirus and Smart App Control false positives"""
     current_dir = Path.cwd()
     dist_dir = current_dir / "dist" / "SuperChrome"
-    readme_path = dist_dir / "ANTIVIRUS_README.txt"
+    readme_path = dist_dir / "SECURITY_README.txt"
     
     readme_content = """
-ANTIVIRUS FALSE POSITIVE INFORMATION
-===================================
+SUPERCHROME SECURITY & SMART APP CONTROL INFO
+=============================================
 
-If your antivirus software flags SuperChrome.exe as suspicious, this is likely a 
-FALSE POSITIVE. This is common with PyInstaller-generated executables.
+If Windows Smart App Control (SAC) or your Antivirus software blocks this program, 
+this is a FALSE POSITIVE common with newly built Python executables.
 
 WHY THIS HAPPENS:
-- PyInstaller bundles Python applications into executables
-- Some antivirus engines flag packed executables as suspicious
-- Machine learning-based detection may trigger on legitimate software
+- Windows Smart App Control (SAC) blocks apps that are not "known-good" or signed.
+- PyInstaller bundles are often flagged by heuristics because they "unpack" code.
+- This application is unsigned because code signing certificates are expensive.
+
+HOW TO UNBLOCK FOR SMART APP CONTROL:
+-------------------------------------
+1. Right-click 'SuperChrome.exe' in this folder.
+2. Select 'Properties'.
+3. If you see an 'Unblock' checkbox at the bottom, check it and click 'Apply'.
+4. If SAC still blocks it, you may need to set SAC to 'Evaluation' or 'Off' in:
+   Windows Security -> App & browser control -> Smart App Control settings.
 
 THIS APPLICATION IS SAFE:
-- Open source Chrome profile management tool
-- Built with legitimate PyQt6 framework
-- No network communication or data collection
-- Source code available for inspection
+-------------------------
+- Open source tool for managing Chrome browser profiles.
+- No network communication, no data collection, no telemetry.
+- Source code: https://github.com/Official-SuperChrome (Check it yourself!)
+- Built with PyQt6 (Standard GUI framework).
 
-WHAT TO DO:
-1. Add SuperChrome.exe to your antivirus whitelist/exclusions
-2. Report false positive to your antivirus vendor
-3. Verify file integrity by checking the embedded version information
+LOCAL SIGNING (FOR DEVELOPERS):
+-------------------------------
+If you are building this yourself and SAC keeps blocking it, you can "self-sign" 
+the executable. A helper script 'sign_locally.ps1' has been generated in the 
+build directory to help you do this.
 
-TECHNICAL DETAILS:
-- Built with PyInstaller and enhanced metadata
-- Digital signature: Not available (requires paid certificate)
-- Version info embedded to reduce false positives
-- UPX compression disabled to avoid detection
+To use it:
+1. Right-click 'sign_locally.ps1' -> Run with PowerShell.
+2. This creates a local certificate and signs the EXE.
+3. You may still need to 'Unblock' the file in Properties afterwards.
 
-For support or to report issues, visit the project repository.
-
-Generated: 2025
+Generated: 2026
 SuperChrome Development Team
 """
     
     try:
         readme_path.write_text(readme_content.strip(), encoding="utf-8")
-        print("[OK] Created antivirus information README")
+        # Remove old file if it exists
+        old_readme = dist_dir / "ANTIVIRUS_README.txt"
+        if old_readme.exists():
+            old_readme.unlink()
+        print("[OK] Created security information README")
     except Exception as e:
-        print(f"[WARN] Failed to create antivirus README: {e}")
+        print(f"[WARN] Failed to create security README: {e}")
+
+def create_signing_script():
+    """Create a PowerShell script to self-sign the executable locally"""
+    current_dir = Path.cwd()
+    dist_dir = current_dir / "dist" / "SuperChrome"
+    script_path = dist_dir / "sign_locally.ps1"
+    
+    script_content = """
+# SuperChrome Local Signing Script
+# This script creates a local self-signed certificate and signs the EXE
+# Run this if Smart App Control or Defender keeps blocking the program
+
+$exePath = Join-Path $PSScriptRoot "SuperChrome.exe"
+
+if (-not (Test-Path $exePath)) {
+    Write-Host "Error: SuperChrome.exe not found in $PSScriptRoot" -ForegroundColor Red
+    exit
+}
+
+Write-Host "Creating local self-signed certificate..." -ForegroundColor Cyan
+$cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=SuperChrome-Local-Dev" -KeyLength 2048 -NotAfter (Get-Date).AddYears(5) -CertStoreLocation "Cert:\\CurrentUser\\My"
+
+Write-Host "Signing executable..." -ForegroundColor Cyan
+Set-AuthenticodeSignature -FilePath $exePath -Certificate $cert
+
+Write-Host "Trusting the certificate locally..." -ForegroundColor Cyan
+$certPath = Join-Path $PSScriptRoot "SuperChromeLocal.cer"
+Export-Certificate -Cert $cert -FilePath $certPath
+Import-Certificate -FilePath $certPath -CertStoreLocation "Cert:\\CurrentUser\\Root"
+
+Write-Host "`nSuccess! SuperChrome.exe has been signed and the certificate trusted." -ForegroundColor Green
+Write-Host "If Windows still blocks it, right-click SuperChrome.exe -> Properties -> Check 'Unblock'." -ForegroundColor Yellow
+Pause
+"""
+    try:
+        script_path.write_text(script_content.strip(), encoding="utf-8")
+        print("[OK] Created local signing helper script")
+    except Exception as e:
+        print(f"[WARN] Failed to create signing script: {e}")
 
 def copy_additional_files():
     """Copy additional files needed by the application"""
@@ -230,6 +280,9 @@ def copy_additional_files():
 
     # Create antivirus information file
     create_antivirus_readme()
+    
+    # Create local signing script
+    create_signing_script()
 
     # Don't hide the src directory - user wants it visible
     print("[OK] Keeping src directory visible")
@@ -264,11 +317,11 @@ def main():
     print("\nTo run the application:")
     print("1. Navigate to the dist/SuperChrome directory")
     print("2. Double-click SuperChrome.exe")
-    print("\nIMPORTANT - Antivirus False Positives:")
-    print("- If your antivirus flags the executable, it's likely a FALSE POSITIVE")
-    print("- This is common with PyInstaller applications")
-    print("- Add SuperChrome.exe to your antivirus exclusions/whitelist")
-    print("- See ANTIVIRUS_README.txt in the dist folder for detailed information")
+    print("\nIMPORTANT - Smart App Control & Antivirus:")
+    print("- If Windows Smart App Control blocks the program, it's a FALSE POSITIVE.")
+    print("- To unblock: Right-click SuperChrome.exe -> Properties -> Check 'Unblock' -> Apply.")
+    print("- If it still blocks, run 'sign_locally.ps1' as administrator in the dist folder.")
+    print("- See SECURITY_README.txt in the dist folder for detailed information.")
     print("\nNote: The first run may take a few seconds to start.")
     
     return True

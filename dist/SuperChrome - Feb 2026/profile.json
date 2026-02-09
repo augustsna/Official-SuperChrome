@@ -1,0 +1,18 @@
+{
+  "profiles": [
+    {
+      "name": "",
+      "profile": "Your Chrome",
+      "channel_types": [
+        "user_custom"
+      ],
+      "sub_types": [
+        "Personal"
+      ],
+      "profile_id": "Default",
+      "email": "",
+      "total_channel": "",
+      "notes": ""
+    }
+  ]
+}
