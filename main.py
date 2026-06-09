@@ -3117,11 +3117,30 @@ class SamplechromeUI(QWidget):
             }
         """)
         
+        # Add open Chrome data folder button
+        chrome_data_btn = QPushButton("Data")
+        chrome_data_btn.setFixedSize(80, 30)
+        chrome_data_btn.clicked.connect(self.open_chrome_data_directory)
+        chrome_data_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #cccccc;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                border: 2px solid #ffc107;
+            }
+        """)
+        
         buttons_layout.addWidget(create_multiple_btn)
         buttons_layout.addWidget(chrome_btn)
         buttons_layout.addWidget(refresh_btn)
         buttons_layout.addWidget(edit_btn)
         buttons_layout.addWidget(cleanup_btn)
+        buttons_layout.addWidget(chrome_data_btn)
         buttons_layout.addStretch()
         buttons_layout.addWidget(launch_btn)
   
@@ -3699,7 +3718,39 @@ class SamplechromeUI(QWidget):
         from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
+    def open_chrome_data_directory(self):
+        """Open the Chrome User Data directory in file explorer"""
+        import subprocess
+        import platform
+        import os
+        
+        try:
+            # Determine Chrome user data directory based on OS
+            system = platform.system()
+            if system == "Windows":
+                chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+            elif system == "Darwin":  # macOS
+                chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+            else:  # Linux
+                chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+            
+            # Check if directory exists
+            if not os.path.exists(chrome_data_dir):
+                CustomMessageBox.show_warning(self, "Directory Not Found", 
+                                            f"Chrome User Data directory not found at:\n{chrome_data_dir}\n\nChrome may not be installed or may be using a different location.")
+                return
+            
+            # Open directory in file explorer
+            if system == "Windows":
+                subprocess.run(['explorer', chrome_data_dir])
+            elif system == "Darwin":  # macOS
+                subprocess.run(['open', chrome_data_dir])
+            else:  # Linux
+                subprocess.run(['xdg-open', chrome_data_dir])
+                
+        except Exception as e:
+            CustomMessageBox.show_error(self, "Error", 
+                                       f"An error occurred while trying to open the directory:\n{str(e)}")
 
     def create_chrome_profiles_on_disk(self, profiles):
         """
