@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QScrollArea, QGroupBox, QFormLayout, QCheckBox, QComboBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QGridLayout, QMenu
 )
-from PyQt6.QtCore import Qt, QSettings, QSize, QTimer
+from PyQt6.QtCore import Qt, QSettings, QSize, QTimer, QThread, pyqtSignal
 from PyQt6.QtGui import QIcon, QPixmap, QColor
 
 # Sample configuration constants
@@ -2068,6 +2068,227 @@ def natural_sort_key(text):
     return [int(part) if part.isdigit() else part.lower() for part in parts]
 
 
+class ProfileValidationWorker(QThread):
+    """Worker thread to validate profile existence on disk without blocking the UI"""
+    finished = pyqtSignal(list, set)  # Emits (profiles, deleted_rows)
+
+    def __init__(self, profiles, parent=None):
+        super().__init__(parent)
+        self.profiles = profiles
+
+    def run(self):
+        deleted_rows = set()
+        for row, profile in enumerate(self.profiles):
+            profile_id = profile.get('profile_id', '')
+            exists = self.validate_profile_exists(profile_id)
+            if not exists:
+                deleted_rows.add(row)
+        self.finished.emit(self.profiles, deleted_rows)
+
+    def validate_profile_exists(self, profile_id):
+        if not profile_id:
+            return False
+        import platform
+        system = platform.system()
+        if system == "Windows":
+            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+        elif system == "Darwin":
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+        else:
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+        profile_dir = os.path.join(chrome_data_dir, profile_id)
+        return os.path.exists(profile_dir)
+
+
+class ChromeProfileCollectorWorker(QThread):
+    """Worker thread to collect Chrome profiles from disk by reading Local State and Preferences"""
+    finished = pyqtSignal(list)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def run(self):
+        import platform
+        chrome_profiles = []
+        system = platform.system()
+        if system == "Windows":
+            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+        elif system == "Darwin":
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+        else:
+            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+
+        if not os.path.exists(chrome_data_dir):
+            self.finished.emit([])
+            return
+
+        local_state_path = os.path.join(chrome_data_dir, 'Local State')
+        if os.path.exists(local_state_path):
+            try:
+                with open(local_state_path, 'r', encoding='utf-8') as f:
+                    local_state = json.load(f)
+                    profile_info = local_state.get('profile', {}).get('info_cache', {})
+                    
+                    for profile_id, profile_data in profile_info.items():
+                        profile_name = profile_data.get('name', f'Profile {profile_id}')
+                        email = self.get_profile_email(chrome_data_dir, profile_id)
+                        
+                        chrome_profiles.append({
+                            'name': '',
+                            'profile': profile_name,
+                            'channel_types': ['user_custom'],
+                            'sub_types': ['Personal'],
+                            'profile_id': profile_id,
+                            'email': email,
+                            'total_channel': '',
+                            'notes': ''
+                        })
+            except Exception as e:
+                print(f"Error reading Chrome profiles in worker: {e}")
+        
+        self.finished.emit(chrome_profiles)
+
+    def get_profile_email(self, chrome_data_dir, profile_id):
+        email = ''
+        try:
+            local_state_path = os.path.join(chrome_data_dir, 'Local State')
+            if os.path.exists(local_state_path):
+                with open(local_state_path, 'r', encoding='utf-8') as f:
+                    local_state = json.load(f)
+                    profile_info = local_state.get('profile', {}).get('info_cache', {})
+                    if profile_id in profile_info:
+                        user_name = profile_info[profile_id].get('user_name', '')
+                        if user_name and '@' in user_name:
+                            email = user_name
+        except Exception:
+            pass
+        
+        if not email:
+            try:
+                preferences_path = os.path.join(chrome_data_dir, profile_id, 'Preferences')
+                if os.path.exists(preferences_path):
+                    with open(preferences_path, 'r', encoding='utf-8') as f:
+                        preferences = json.load(f)
+                        profile = preferences.get('profile', {})
+                        if profile:
+                            email = profile.get('email_address', '')
+                        if not email:
+                            signin = preferences.get('signin', {})
+                            if signin:
+                                email = signin.get('email', '')
+                        if not email:
+                            account_tracker = preferences.get('account_tracker_service', {})
+                            if account_tracker:
+                                accounts = account_tracker.get('accounts', {})
+                                for account_id, account_data in accounts.items():
+                                    if isinstance(account_data, dict) and 'email' in account_data:
+                                        email = account_data['email']
+                                        break
+                        if not email:
+                            identity = preferences.get('identity', {})
+                            if identity:
+                                email = identity.get('primary_account_email', '')
+                        if not email:
+                            sync = preferences.get('sync', {})
+                            if sync:
+                                email = sync.get('requested', {}).get('email', '')
+            except Exception:
+                pass
+        
+        if not email:
+            try:
+                secure_preferences_path = os.path.join(chrome_data_dir, profile_id, 'Secure Preferences')
+                if os.path.exists(secure_preferences_path):
+                    with open(secure_preferences_path, 'r', encoding='utf-8') as f:
+                        secure_preferences = json.load(f)
+                        account_migration = secure_preferences.get('account_id_migration_state', {})
+                        if account_migration:
+                            email = account_migration.get('email', '')
+                        if not email:
+                            profile = secure_preferences.get('profile', {})
+                            if profile:
+                                email = profile.get('email_address', '')
+            except Exception:
+                pass
+        return email.strip() if email else ''
+
+
+class ProfileDiskCreationWorker(QThread):
+    """Worker thread to create profile directories and Preference files on disk in background"""
+    finished = pyqtSignal(bool, str)
+
+    def __init__(self, profiles, parent=None):
+        super().__init__(parent)
+        self.profiles = profiles
+
+    def run(self):
+        try:
+            import platform
+            system = platform.system()
+            if system == "Windows":
+                chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+            elif system == "Darwin":
+                chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+            else:
+                chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+            
+            if not os.path.exists(chrome_data_dir):
+                self.finished.emit(False, "Chrome user data directory not found")
+                return
+            
+            local_state_path = os.path.join(chrome_data_dir, 'Local State')
+            if os.path.exists(local_state_path):
+                with open(local_state_path, 'r', encoding='utf-8') as f:
+                    local_state = json.load(f)
+            else:
+                local_state = {}
+            
+            if 'profile' not in local_state:
+                local_state['profile'] = {}
+            if 'info_cache' not in local_state['profile']:
+                local_state['profile']['info_cache'] = {}
+            
+            created_profiles = []
+            for profile in self.profiles:
+                profile_id = profile.get('profile_id', '')
+                profile_name = profile.get('profile', '')
+                if not profile_id or not profile_name:
+                    continue
+                
+                profile_path = os.path.join(chrome_data_dir, profile_id)
+                os.makedirs(profile_path, exist_ok=True)
+                
+                preferences = {
+                    "profile": {
+                        "name": profile_name,
+                        "exit_type": "Normal",
+                        "exited_cleanly": True
+                    }
+                }
+                preferences_path = os.path.join(profile_path, "Preferences")
+                with open(preferences_path, 'w', encoding='utf-8') as f:
+                    json.dump(preferences, f, indent=2, ensure_ascii=False)
+                
+                local_state['profile']['info_cache'][profile_id] = {
+                    "name": profile_name,
+                    "avatar_index": 0,
+                    "background_apps": False,
+                    "is_using_default_name": False,
+                    "active_time": 0
+                }
+                created_profiles.append(profile_id)
+            
+            if created_profiles:
+                local_state['profile']['last_used'] = created_profiles[0]
+                with open(local_state_path, 'w', encoding='utf-8') as f:
+                    json.dump(local_state, f, indent=2, ensure_ascii=False)
+                self.finished.emit(True, f"Successfully created {len(created_profiles)} Chrome profile directories")
+            else:
+                self.finished.emit(False, "No profiles were created")
+        except Exception as e:
+            self.finished.emit(False, f"Error creating Chrome profiles on disk: {str(e)}")
+
+
 class SamplechromeUI(QWidget):
     """Sample main application window demonstrating chrome UI structure"""
     
@@ -2330,37 +2551,35 @@ class SamplechromeUI(QWidget):
         return os.path.exists(profile_dir)
 
     def cleanup_deleted_profiles(self):
-        """Remove profiles that no longer exist in Chrome"""
-        valid_profiles = []
-        deleted_profiles = []
+        """Remove profiles that no longer exist in Chrome using a background worker"""
+        if hasattr(self, 'cleanup_btn'):
+            self.cleanup_btn.setEnabled(False)
         
-        for profile in self.profiles:
-            if self.validate_profile_exists(profile.get('profile_id', '')):
-                valid_profiles.append(profile)
-            else:
-                deleted_profiles.append(profile)
-        
-        if deleted_profiles:
-            # Show confirmation dialog with list of profiles to be deleted
+        self.cleanup_validation_worker = ProfileValidationWorker(self.profiles, self)
+        self.cleanup_validation_worker.finished.connect(self.on_cleanup_validation_finished)
+        self.cleanup_validation_worker.start()
+
+    def on_cleanup_validation_finished(self, profiles, deleted_rows):
+        if hasattr(self, 'cleanup_btn'):
+            self.cleanup_btn.setEnabled(True)
+            
+        if deleted_rows:
+            valid_profiles = [profiles[i] for i in range(len(profiles)) if i not in deleted_rows]
+            deleted_profiles = [profiles[i] for i in deleted_rows]
+            
             profile_names = [p.get('profile', '') for p in deleted_profiles]
             confirmation_message = f"{len(deleted_profiles)} profiles will be removed:\n\n\n"
             confirmation_message += f"{' , '.join(profile_names)}\n\n\n"
             confirmation_message += "All data will be deleted\nThis action cannot be undone.\n"
             
-            # Create custom confirmation dialog
             reply = CustomMessageBox.show_confirmation(self, "Confirm Cleanup", confirmation_message)
-            
             if reply:
-                # User confirmed, proceed with cleanup
                 self.profiles = valid_profiles
-                
-                # Sort profiles alphabetically by profile name after cleanup
                 self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
-                
                 self.save_profiles(self.profiles)
-                self.populate_profiles_table()
+                self.populate_profiles_table(skip_validation=True)
+                self.start_background_validation()
                 
-                # Show success notification
                 CustomMessageBox.show_success(self, "Profiles Cleaned", 
                                            f"Successfully removed {len(deleted_profiles)} deleted profiles:\n{', '.join(profile_names)}")
         else:
@@ -2368,14 +2587,15 @@ class SamplechromeUI(QWidget):
                                      "All profiles are valid and exist.")
 
     def check_deleted_profiles_on_startup(self):
-        """Check for deleted profiles on startup and show a warning if found"""
-        deleted_profiles = []
-        
-        for profile in self.profiles:
-            if not self.validate_profile_exists(profile.get('profile_id', '')):
-                deleted_profiles.append(profile)
-        
-        if deleted_profiles:
+        """Check for deleted profiles on startup and show a warning if found using a background worker"""
+        self.startup_validation_worker = ProfileValidationWorker(self.profiles, self)
+        self.startup_validation_worker.finished.connect(self.on_startup_validation_finished)
+        self.startup_validation_worker.start()
+
+    def on_startup_validation_finished(self, profiles, deleted_rows):
+        """Callback for startup validation thread"""
+        if deleted_rows:
+            deleted_profiles = [profiles[i] for i in deleted_rows]
             profile_names = [p.get('profile', '') for p in deleted_profiles]
             CustomMessageBox.show_warning(self, "Deleted Profiles Found", 
                                         f"Found {len(deleted_profiles)} deleted Chrome profiles:\n\n"
@@ -2990,7 +3210,8 @@ class SamplechromeUI(QWidget):
         self.profiles_table.cellDoubleClicked.connect(self.on_table_double_clicked)
         
         # Populate table with profile data
-        self.populate_profiles_table()
+        self.populate_profiles_table(skip_validation=True)
+        self.start_background_validation()
         
         # Apply saved sorting preferences
         self.sort_profiles_table()
@@ -3012,10 +3233,10 @@ class SamplechromeUI(QWidget):
         buttons_layout.setSpacing(10)
         
         # Add refresh button
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.setFixedSize(80, 30)
-        refresh_btn.clicked.connect(self.refresh_profiles)
-        refresh_btn.setStyleSheet("""
+        self.refresh_btn = QPushButton("Refresh")
+        self.refresh_btn.setFixedSize(80, 30)
+        self.refresh_btn.clicked.connect(self.refresh_profiles)
+        self.refresh_btn.setStyleSheet("""
             QPushButton {
                 background-color: #ffffff;
                 color: #333333;
@@ -3030,10 +3251,10 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add collect Chrome profiles button
-        chrome_btn = QPushButton("Collect")
-        chrome_btn.setFixedSize(80, 30)
-        chrome_btn.clicked.connect(self.collect_chrome_profiles)
-        chrome_btn.setStyleSheet("""
+        self.chrome_btn = QPushButton("Collect")
+        self.chrome_btn.setFixedSize(80, 30)
+        self.chrome_btn.clicked.connect(self.collect_chrome_profiles)
+        self.chrome_btn.setStyleSheet("""
             QPushButton {
                 background-color: #ffffff;
                 color: #333333;
@@ -3048,10 +3269,10 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add create multiple profiles button
-        create_multiple_btn = QPushButton("Add")
-        create_multiple_btn.setFixedSize(80, 30)
-        create_multiple_btn.clicked.connect(self.create_multiple_profiles)
-        create_multiple_btn.setStyleSheet("""
+        self.create_multiple_btn = QPushButton("Add")
+        self.create_multiple_btn.setFixedSize(80, 30)
+        self.create_multiple_btn.clicked.connect(self.create_multiple_profiles)
+        self.create_multiple_btn.setStyleSheet("""
             QPushButton {
                 background-color: #ffffff;
                 color: #333333;
@@ -3066,10 +3287,10 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add launch button
-        launch_btn = QPushButton("Launch")
-        launch_btn.setFixedSize(100, 30)
-        launch_btn.clicked.connect(self.launch_selected_profile)
-        launch_btn.setStyleSheet("""
+        self.launch_btn = QPushButton("Launch")
+        self.launch_btn.setFixedSize(100, 30)
+        self.launch_btn.clicked.connect(self.launch_selected_profile)
+        self.launch_btn.setStyleSheet("""
             QPushButton {
                 background-color: #4a90e2;
                 color: white;
@@ -3082,10 +3303,10 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add edit button
-        edit_btn = QPushButton("Edit")
-        edit_btn.setFixedSize(80, 30)
-        edit_btn.clicked.connect(self.edit_selected_profile)
-        edit_btn.setStyleSheet("""
+        self.edit_btn = QPushButton("Edit")
+        self.edit_btn.setFixedSize(80, 30)
+        self.edit_btn.clicked.connect(self.edit_selected_profile)
+        self.edit_btn.setStyleSheet("""
             QPushButton {
                 background-color: #ffffff;
                 color: #333333;
@@ -3100,10 +3321,10 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add cleanup button
-        cleanup_btn = QPushButton("Clean")
-        cleanup_btn.setFixedSize(80, 30)
-        cleanup_btn.clicked.connect(self.cleanup_deleted_profiles)
-        cleanup_btn.setStyleSheet("""
+        self.cleanup_btn = QPushButton("Clean")
+        self.cleanup_btn.setFixedSize(80, 30)
+        self.cleanup_btn.clicked.connect(self.cleanup_deleted_profiles)
+        self.cleanup_btn.setStyleSheet("""
             QPushButton {
                 background-color: #ffffff;
                 color: #333333;
@@ -3118,10 +3339,10 @@ class SamplechromeUI(QWidget):
         """)
         
         # Add open Chrome data folder button
-        chrome_data_btn = QPushButton("Data")
-        chrome_data_btn.setFixedSize(80, 30)
-        chrome_data_btn.clicked.connect(self.open_chrome_data_directory)
-        chrome_data_btn.setStyleSheet("""
+        self.chrome_data_btn = QPushButton("Data")
+        self.chrome_data_btn.setFixedSize(80, 30)
+        self.chrome_data_btn.clicked.connect(self.open_chrome_data_directory)
+        self.chrome_data_btn.setStyleSheet("""
             QPushButton {
                 background-color: #ffffff;
                 color: #333333;
@@ -3135,14 +3356,14 @@ class SamplechromeUI(QWidget):
             }
         """)
         
-        buttons_layout.addWidget(create_multiple_btn)
-        buttons_layout.addWidget(chrome_btn)
-        buttons_layout.addWidget(refresh_btn)
-        buttons_layout.addWidget(edit_btn)
-        buttons_layout.addWidget(cleanup_btn)
-        buttons_layout.addWidget(chrome_data_btn)
+        buttons_layout.addWidget(self.create_multiple_btn)
+        buttons_layout.addWidget(self.chrome_btn)
+        buttons_layout.addWidget(self.refresh_btn)
+        buttons_layout.addWidget(self.edit_btn)
+        buttons_layout.addWidget(self.cleanup_btn)
+        buttons_layout.addWidget(self.chrome_data_btn)
         buttons_layout.addStretch()
-        buttons_layout.addWidget(launch_btn)
+        buttons_layout.addWidget(self.launch_btn)
   
         # Add search layout and table to main layout
         layout.addLayout(search_layout)
@@ -3153,79 +3374,72 @@ class SamplechromeUI(QWidget):
         layout.addSpacing(4)  # Add space between table and buttons
 
     def populate_profiles_table(self, skip_validation=False):
-        """Populate the profiles table with data from profile.json"""
-        self.profiles_table.setRowCount(len(self.profiles))
+        """Populate the profiles table with data from profile.json using item-reuse optimization"""
+        if self.profiles_table.rowCount() != len(self.profiles):
+            self.profiles_table.setRowCount(len(self.profiles))
         
         # Initialize the mapping for unsorted state
         self.table_row_to_profile_index = {i: i for i in range(len(self.profiles))}
         
         deleted_rows = set()
         
-        for row, profile in enumerate(self.profiles):
-            # Check if profile exists (skip validation for faster refresh)
-            profile_exists = True if skip_validation else self.validate_profile_exists(profile.get('profile_id', ''))
-            
-            # Number
-            number_item = QTableWidgetItem(str(row + 1))
-            number_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 0, number_item)
-            
-            # Name
-            name_item = QTableWidgetItem(profile.get('name', ''))
-            self.profiles_table.setItem(row, 1, name_item)
-            
-            # Profile
-            profile_name = profile.get('profile', '')
-            profile_item = QTableWidgetItem(profile_name)
-            self.profiles_table.setItem(row, 2, profile_item)
-            
-            # Channel Types
-            channel_types = profile.get('channel_types', [])
-            if isinstance(channel_types, str):
-                # Handle legacy single channel_type
-                channel_types = [channel_types] if channel_types else []
-            
-            channel_types_text = ', '.join(channel_types) if channel_types else ''
-            channel_type_item = QTableWidgetItem(channel_types_text)
-            channel_type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 3, channel_type_item)
-            
-            # Sub Type
-            sub_types = profile.get('sub_types', [])
-            if isinstance(sub_types, str):
-                # Handle legacy single sub_type
-                sub_types = [sub_types] if sub_types else []
-            
-            sub_types_text = ', '.join(sub_types) if sub_types else ''
-            sub_type_item = QTableWidgetItem(sub_types_text)
-            sub_type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 4, sub_type_item)
-            
-            # Email
-            email = profile.get('email', '')
-            email_item = QTableWidgetItem(email)
-            self.profiles_table.setItem(row, 5, email_item)
-            
-            # Total Channel
-            total_channel = profile.get('total_channel', '')
-            total_channel_item = QTableWidgetItem(total_channel)
-            total_channel_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 6, total_channel_item)
-            
-            # Notes
-            notes = profile.get('notes', '')
-            notes_item = QTableWidgetItem(notes)
-            self.profiles_table.setItem(row, 7, notes_item)
-            
-            # Profile ID
-            profile_id = profile.get('profile_id', '')
-            profile_id_item = QTableWidgetItem(profile_id)
-            profile_id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.profiles_table.setItem(row, 8, profile_id_item)
-            
-            # Track deleted profiles for custom delegate
-            if not profile_exists:
-                deleted_rows.add(row)
+        # Temporarily disable updates to avoid repaint overhead
+        self.profiles_table.setUpdatesEnabled(False)
+        try:
+            for row, profile in enumerate(self.profiles):
+                # Check if profile exists (skip validation for faster refresh)
+                profile_exists = True if skip_validation else self.validate_profile_exists(profile.get('profile_id', ''))
+                
+                # Helper function to reuse or create table items
+                def set_item_text(col, text, align_center=False):
+                    item = self.profiles_table.item(row, col)
+                    if item is None:
+                        item = QTableWidgetItem(text)
+                        if align_center:
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.profiles_table.setItem(row, col, item)
+                    else:
+                        item.setText(text)
+                
+                # Number
+                set_item_text(0, str(row + 1), align_center=True)
+                # Name
+                set_item_text(1, profile.get('name', ''))
+                # Profile
+                set_item_text(2, profile.get('profile', ''))
+                
+                # Channel Types
+                channel_types = profile.get('channel_types', [])
+                if isinstance(channel_types, str):
+                    # Handle legacy single channel_type
+                    channel_types = [channel_types] if channel_types else []
+                
+                channel_types_text = ', '.join(channel_types) if channel_types else ''
+                set_item_text(3, channel_types_text, align_center=True)
+                
+                # Sub Type
+                sub_types = profile.get('sub_types', [])
+                if isinstance(sub_types, str):
+                    # Handle legacy single sub_type
+                    sub_types = [sub_types] if sub_types else []
+                
+                sub_types_text = ', '.join(sub_types) if sub_types else ''
+                set_item_text(4, sub_types_text, align_center=True)
+                
+                # Email
+                set_item_text(5, profile.get('email', ''))
+                # Total Channel
+                set_item_text(6, profile.get('total_channel', ''), align_center=True)
+                # Notes
+                set_item_text(7, profile.get('notes', ''))
+                # Profile ID
+                set_item_text(8, profile.get('profile_id', ''), align_center=True)
+                
+                # Track deleted profiles for custom delegate
+                if not profile_exists:
+                    deleted_rows.add(row)
+        finally:
+            self.profiles_table.setUpdatesEnabled(True)
         
         # Update the custom delegate with deleted rows
         if hasattr(self, 'table_delegate'):
@@ -3241,6 +3455,19 @@ class SamplechromeUI(QWidget):
         # Select the first row if there are profiles
         if self.profiles_table.rowCount() > 0:
             self.profiles_table.setCurrentCell(0, 0)
+
+    def start_background_validation(self):
+        """Start background validation of profile directories"""
+        self.validation_worker = ProfileValidationWorker(self.profiles, self)
+        self.validation_worker.finished.connect(self.on_validation_finished)
+        self.validation_worker.start()
+
+    def on_validation_finished(self, profiles, deleted_rows):
+        """Callback for when background validation finishes"""
+        if hasattr(self, 'table_delegate'):
+            self.table_delegate.set_deleted_rows(deleted_rows)
+        # Force update styling of the table
+        self.profiles_table.viewport().update()
 
     def update_channel_type_filter_options(self):
         """Update the channel type filter dropdown with options from config.json"""
@@ -3495,31 +3722,39 @@ class SamplechromeUI(QWidget):
         self._repopulate_table_with_sorted_data(rows_data)
 
     def _repopulate_table_with_sorted_data(self, rows_data):
-        """Helper function to repopulate table with sorted data"""
-        self.profiles_table.setRowCount(0)
-        self.profiles_table.setRowCount(len(rows_data))
-        
-        # Store the mapping of table rows to profile indices
-        self.table_row_to_profile_index = {}
-        
-        for row, row_data in enumerate(rows_data):
-            # Find the original profile index by matching profile_id
-            profile_id = row_data[8]  # Profile ID column
-            original_index = None
-            for i, profile in enumerate(self.profiles):
-                if profile.get('profile_id', '') == profile_id:
-                    original_index = i
-                    break
+        """Helper function to repopulate table with sorted data using item-reuse optimization"""
+        self.profiles_table.setUpdatesEnabled(False)
+        try:
+            if self.profiles_table.rowCount() != len(rows_data):
+                self.profiles_table.setRowCount(len(rows_data))
             
-            if original_index is not None:
-                self.table_row_to_profile_index[row] = original_index
+            # Store the mapping of table rows to profile indices
+            self.table_row_to_profile_index = {}
             
-            for col, cell_data in enumerate(row_data):
-                item = QTableWidgetItem(cell_data)
-                # Apply center alignment for specific columns
-                if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                self.profiles_table.setItem(row, col, item)
+            for row, row_data in enumerate(rows_data):
+                # Find the original profile index by matching profile_id
+                profile_id = row_data[8]  # Profile ID column
+                original_index = None
+                for i, profile in enumerate(self.profiles):
+                    if profile.get('profile_id', '') == profile_id:
+                        original_index = i
+                        break
+                
+                if original_index is not None:
+                    self.table_row_to_profile_index[row] = original_index
+                
+                for col, cell_data in enumerate(row_data):
+                    item = self.profiles_table.item(row, col)
+                    if item is None:
+                        item = QTableWidgetItem(cell_data)
+                        # Apply center alignment for specific columns
+                        if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
+                            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        self.profiles_table.setItem(row, col, item)
+                    else:
+                        item.setText(cell_data)
+        finally:
+            self.profiles_table.setUpdatesEnabled(True)
 
     def on_header_clicked(self, logical_index):
         """Handle header clicks for sorting"""
@@ -3563,6 +3798,7 @@ class SamplechromeUI(QWidget):
         """Refresh the profiles table with updated data from profile.json"""
         self.profiles = self.load_profiles()
         self.populate_profiles_table(skip_validation=True)
+        self.start_background_validation()
         
         # Create custom dialog with auto-close for refresh success
         dialog = CustomMessageBox(self, "Refresh Complete", "Loading from Updated JSON file ", "success")
@@ -3575,7 +3811,7 @@ class SamplechromeUI(QWidget):
         dialog.exec()
 
     def create_multiple_profiles(self):
-        """Create multiple Chrome profiles with custom settings"""
+        """Create multiple Chrome profiles with custom settings using background workers"""
         # Check if Chrome is running before proceeding
         if not check_chrome_running_and_warn(self):
             return
@@ -3594,15 +3830,13 @@ class SamplechromeUI(QWidget):
             if created_profiles:
                 # Check if user wants to create profiles on disk
                 if profile_data.get('create_on_disk', False):
-                    # Create profiles on disk
-                    success, message = self.create_chrome_profiles_on_disk(created_profiles)
-                    if success:
-                        LargeCustomMessageBox.show_success(self, "Chrome Profiles Created", 
-                                                    f"{message}\n\n"
-                                                    "You can now launch these profiles from Chrome!")
-                    else:
-                        CustomMessageBox.show_warning(self, "Partial Success", 
-                                                    f"Profiles created in SuperChrome but failed to create on disk:\n{message}")
+                    # Disable buttons while creating on disk
+                    if hasattr(self, 'create_multiple_btn'):
+                        self.create_multiple_btn.setEnabled(False)
+                    
+                    self.creation_worker = ProfileDiskCreationWorker(created_profiles, self)
+                    self.creation_worker.finished.connect(lambda success, message: self.on_profiles_created_on_disk(success, message, created_profiles))
+                    self.creation_worker.start()
                 else:
                     # Show success message for profiles created in SuperChrome only
                     if len(created_profiles) > 5:
@@ -3612,12 +3846,30 @@ class SamplechromeUI(QWidget):
                         profile_names = [profile['profile'] for profile in created_profiles]
                         LargeCustomMessageBox.show_success(self, "Success", 
                                                     f"Successfully created profiles in SuperChrome: {', '.join(profile_names)}")
-                
-                # Refresh the table
-                self.populate_profiles_table(skip_validation=True)
+                    
+                    # Refresh the table and start background validation
+                    self.populate_profiles_table(skip_validation=True)
+                    self.start_background_validation()
             else:
                 CustomMessageBox.show_error(self, "Error", 
                                           "Failed to create profiles. Please try again.")
+
+    def on_profiles_created_on_disk(self, success, message, created_profiles):
+        """Callback for background profile disk creation worker"""
+        if hasattr(self, 'create_multiple_btn'):
+            self.create_multiple_btn.setEnabled(True)
+            
+        if success:
+            LargeCustomMessageBox.show_success(self, "Chrome Profiles Created", 
+                                        f"{message}\n\n"
+                                        "You can now launch these profiles from Chrome!")
+        else:
+            CustomMessageBox.show_warning(self, "Partial Success", 
+                                        f"Profiles created in SuperChrome but failed to create on disk:\n{message}")
+        
+        # Refresh the table and start background validation
+        self.populate_profiles_table(skip_validation=True)
+        self.start_background_validation()
 
     def create_profiles_from_data(self, profile_data):
         """Create multiple profiles using modern Chrome 2022+ profile creation"""
@@ -3752,122 +4004,21 @@ class SamplechromeUI(QWidget):
             CustomMessageBox.show_error(self, "Error", 
                                        f"An error occurred while trying to open the directory:\n{str(e)}")
 
-    def create_chrome_profiles_on_disk(self, profiles):
-        """
-        Create Chrome profile directories with direct approach.
-        
-        ✅ Direct profile directory creation
-        ✅ Basic Preferences file only  
-        ✅ Simple error handling
-        ✅ Clean, straightforward approach
-        ✅ Local update state so Chrome recognizes profiles immediately
-        """
-        try:
-            # Check if Chrome is running before creating profiles on disk
-            if is_chrome_running():
-                return False, "Chrome is currently running. Please close Chrome before creating profiles on disk."
-            
-            # ✅ Simple error handling - determine Chrome user data directory
-            system = platform.system()
-            if system == "Windows":
-                chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-            elif system == "Darwin":  # macOS
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-            else:  # Linux
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
-            
-            if not os.path.exists(chrome_data_dir):
-                return False, "Chrome user data directory not found"
-            
-            # ✅ Local update state - read existing Local State file
-            local_state_path = os.path.join(chrome_data_dir, 'Local State')
-            if os.path.exists(local_state_path):
-                with open(local_state_path, 'r', encoding='utf-8') as f:
-                    local_state = json.load(f)
-            else:
-                local_state = {}
-            
-            # Ensure profile structure exists
-            if 'profile' not in local_state:
-                local_state['profile'] = {}
-            if 'info_cache' not in local_state['profile']:
-                local_state['profile']['info_cache'] = {}
-            
-            # ✅ Direct profile directory creation
-            created_profiles = []
-            for profile in profiles:
-                profile_id = profile.get('profile_id', '')
-                profile_name = profile.get('profile', '')
-                
-                if not profile_id or not profile_name:
-                    continue
-                
-                # ✅ Direct profile directory creation
-                profile_path = os.path.join(chrome_data_dir, profile_id)
-                try:
-                    os.makedirs(profile_path, exist_ok=True)
-                    
-                    # ✅ Basic Preferences file only
-                    preferences = {
-                        "profile": {
-                            "name": profile_name,
-                            "exit_type": "Normal",
-                            "exited_cleanly": True
-                        }
-                    }
-                    
-                    preferences_path = os.path.join(profile_path, "Preferences")
-                    with open(preferences_path, 'w', encoding='utf-8') as f:
-                        json.dump(preferences, f, indent=2, ensure_ascii=False)
-                    
-                    # ✅ Local update state - add profile to Local State
-                    local_state['profile']['info_cache'][profile_id] = {
-                        "name": profile_name,
-                        "avatar_index": 0,
-                        "background_apps": False,
-                        "is_using_default_name": False,
-                        "active_time": 0
-                    }
-                    
-                    created_profiles.append(profile_id)
-                    
-                except Exception as e:
-                    # ✅ Simple error handling
-                    print(f"Warning: Failed to create profile {profile_id}: {e}")
-            
-            # Update Local State with created profiles
-            if created_profiles:
-                local_state['profile']['last_used'] = created_profiles[0]
-                
-                # Write updated Local State back to file
-                with open(local_state_path, 'w', encoding='utf-8') as f:
-                    json.dump(local_state, f, indent=2, ensure_ascii=False)
-            
-            # ✅ Clean, straightforward approach - simple success reporting
-            if created_profiles:
-                return True, f"Successfully created {len(created_profiles)} Chrome profile directories"
-            else:
-                return False, "No profiles were created"
-            
-        except Exception as e:
-            return False, f"Error creating Chrome profiles on disk: {str(e)}"
-
-    # ❌ Removed complex helper methods:
-    # ❌ is_chrome_running() - Chrome process detection
-    # ❌ backup_chrome_files() - Automatic backups  
-    # ❌ create_modern_chrome_profile() - Modern Chrome file structures
-    # ❌ get_modern_preferences() - Complex Local State updates
-    # ❌ get_secure_preferences() - Multiple helper methods
-    # ❌ get_modern_profile_info() - Profile validation
-    # ❌ create_empty_file() - Modern Chrome file structures
-    # ❌ validate_chrome_profile_structure() - Profile validation
-    # ❌ check_chrome_version_compatibility() - Chrome version compatibility checks
-    # ❌ get_chrome_version() - Chrome version compatibility checks
-
     def collect_chrome_profiles(self):
-        """Collect Chrome profiles and add them to the existing profiles"""
-        chrome_profiles = self.get_chrome_profiles()
-        
+        """Collect Chrome profiles using a background worker"""
+        if hasattr(self, 'chrome_btn'):
+            self.chrome_btn.setEnabled(False)
+            self.chrome_btn.setText("Scanning...")
+            
+        self.collector_worker = ChromeProfileCollectorWorker(self)
+        self.collector_worker.finished.connect(self.on_chrome_profiles_collected)
+        self.collector_worker.start()
+
+    def on_chrome_profiles_collected(self, chrome_profiles):
+        if hasattr(self, 'chrome_btn'):
+            self.chrome_btn.setEnabled(True)
+            self.chrome_btn.setText("Collect")
+            
         if not chrome_profiles:
             CustomMessageBox.show_info(self, "No Chrome Profiles", 
                                      "No Chrome profiles found. Make sure Chrome is installed and has been used at least once.")
@@ -3980,6 +4131,7 @@ class SamplechromeUI(QWidget):
         # Save to file
         if self.save_profiles(self.profiles):
             self.populate_profiles_table(skip_validation=True)
+            self.start_background_validation()
             
             # Prepare success message
             message_parts = []
@@ -4160,6 +4312,7 @@ class SamplechromeUI(QWidget):
             # Save to file
             if self.save_profiles(self.profiles):
                 self.populate_profiles_table(skip_validation=True)
+                self.start_background_validation()
                 
                 # Find and select the edited profile after resorting
                 if profile_id_to_find:
