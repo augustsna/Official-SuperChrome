@@ -2133,8 +2133,12 @@ class ChromeProfileCollectorWorker(QThread):
                         profile_name = profile_data.get('name', f'Profile {profile_id}')
                         email = self.get_profile_email(chrome_data_dir, profile_id)
                         
+                        name = ''
+                        if email and '@' in email:
+                            name = email.split('@')[0].strip()
+                        
                         chrome_profiles.append({
-                            'name': '',
+                            'name': name,
                             'profile': profile_name,
                             'channel_types': ['user_custom'],
                             'sub_types': ['Personal'],
@@ -2417,8 +2421,12 @@ class SamplechromeUI(QWidget):
                         # Try to get email from profile preferences
                         email = self.get_profile_email(chrome_data_dir, profile_id)
                         
+                        name = ''
+                        if email and '@' in email:
+                            name = email.split('@')[0].strip()
+                        
                         chrome_profiles.append({
-                            'name': '',
+                            'name': name,
                             'profile': profile_name,
                             'channel_types': ['user_custom'],
                             'sub_types': ['Personal'],
@@ -3402,7 +3410,7 @@ class SamplechromeUI(QWidget):
                         item.setText(text)
                 
                 # Number
-                set_item_text(0, str(row + 1), align_center=True)
+                set_item_text(0, str(row), align_center=True)
                 # Name
                 set_item_text(1, profile.get('name', ''))
                 # Profile
@@ -3744,15 +3752,16 @@ class SamplechromeUI(QWidget):
                     self.table_row_to_profile_index[row] = original_index
                 
                 for col, cell_data in enumerate(row_data):
+                    display_text = str(row) if col == 0 else cell_data
                     item = self.profiles_table.item(row, col)
                     if item is None:
-                        item = QTableWidgetItem(cell_data)
+                        item = QTableWidgetItem(display_text)
                         # Apply center alignment for specific columns
                         if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
                             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.profiles_table.setItem(row, col, item)
                     else:
-                        item.setText(cell_data)
+                        item.setText(display_text)
         finally:
             self.profiles_table.setUpdatesEnabled(True)
 
@@ -4115,7 +4124,13 @@ class SamplechromeUI(QWidget):
                     # Add the new profile data
                     self.profiles.append(chrome_profile)
                     updated_profiles.append(chrome_profile)
-                # If emails match, skip (no change needed)
+                else:
+                    # Emails match - check if name is empty in existing profile but available in new profile
+                    existing_name = existing_profile.get('name', '').strip()
+                    new_name = chrome_profile.get('name', '').strip()
+                    if not existing_name and new_name:
+                        existing_profile['name'] = new_name
+                        updated_profiles.append(existing_profile)
             else:
                 # New profile ID - add it (already added to added_profiles in first pass)
                 self.profiles.append(chrome_profile)
