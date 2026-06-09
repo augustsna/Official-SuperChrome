@@ -22,7 +22,7 @@
     "icon_path": "src/icon.png"
   },
   "sorting_preferences": {
-    "sort_field": "Profile",
+    "sort_field": "Profile ID",
     "sort_order": "A-Z"
   }
 }

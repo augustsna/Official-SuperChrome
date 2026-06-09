@@ -2583,7 +2583,7 @@ class SamplechromeUI(QWidget):
             reply = CustomMessageBox.show_confirmation(self, "Confirm Cleanup", confirmation_message)
             if reply:
                 self.profiles = valid_profiles
-                self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+                self.profiles.sort(key=lambda profile: natural_sort_key(profile.get('profile', '')))
                 self.save_profiles(self.profiles)
                 self.populate_profiles_table(skip_validation=True)
                 self.start_background_validation()
@@ -4140,8 +4140,8 @@ class SamplechromeUI(QWidget):
                                      "All profiles are up to date.")
             return
         
-        # Sort profiles alphabetically by profile name before saving
-        self.profiles.sort(key=lambda profile: profile.get('profile', '').lower())
+        # Sort profiles alphabetically by profile name before saving using natural sorting
+        self.profiles.sort(key=lambda profile: natural_sort_key(profile.get('profile', '')))
         
         # Save to file
         if self.save_profiles(self.profiles):
