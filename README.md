@@ -53,7 +53,6 @@ If you prefer to build manually:
 3. **Copy additional files** to the `dist` directory:
    - `config.json`
    - `profile.json`
-   - `down_arrow.svg`
    - `src/` directory
 
 ## Running the Application
@@ -76,9 +75,7 @@ SuperChrome/
 ├── requirements.txt     # Python dependencies
 ├── config.json          # Application configuration
 ├── profile.json         # Profile data storage
-├── down_arrow.svg       # UI assets
-└── src/
-    └── icon.png         # Application icon
+└── src/                 # Icons and SVG assets (icon.png, icon2*.png, tick.svg, black_tick.svg)
 ```
 
 ## Configuration
@@ -116,9 +113,10 @@ The application uses `config.json` for configuration:
 
 ### Runtime Issues
 
-- **Chrome not found**: Ensure Google Chrome is installed in the default location
+- **Chrome not found**: SuperChrome looks in Program Files, Program Files (x86), the per-user install under `%LOCALAPPDATA%`, `/Applications` on macOS, and `PATH`
 - **No profiles detected**: Make sure Chrome has been used at least once
 - **Permission errors**: Run as administrator if needed
+- **"Profile Data Unreadable" on startup**: `profile.json` was corrupt. The original is kept as `profile.json.corrupt-<timestamp>` next to the app so you can restore it
 
 ### Performance
 

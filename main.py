@@ -15,6 +15,10 @@ import sys
 import json
 import platform
 import re
+import shutil
+import subprocess
+import tempfile
+from datetime import datetime
 import psutil
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import (
@@ -31,12 +35,73 @@ WINDOW_TITLE = "SuperChrome - Chrome Profile Manager"
 ICON_PATH = "src/icon.png"
 PROJECT_ROOT = "."
 
+
+def app_base_dir():
+    """Directory holding config.json, profile.json and src/ (next to the exe when frozen)."""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def get_chrome_user_data_dir():
+    """Return the default Chrome 'User Data' directory for the current OS."""
+    system = platform.system()
+    if system == "Windows":
+        return os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
+    if system == "Darwin":
+        return os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
+    return os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+
+
+def find_chrome_executable():
+    """Locate the Chrome executable, or return None if it cannot be found."""
+    system = platform.system()
+    if system == "Windows":
+        candidates = [
+            os.path.join(os.environ.get('PROGRAMFILES', r'C:\Program Files'), 'Google', 'Chrome', 'Application', 'chrome.exe'),
+            os.path.join(os.environ.get('PROGRAMFILES(X86)', r'C:\Program Files (x86)'), 'Google', 'Chrome', 'Application', 'chrome.exe'),
+            # Per-user installs (no admin rights) live under LOCALAPPDATA
+            os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'Application', 'chrome.exe'),
+        ]
+    elif system == "Darwin":
+        candidates = [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            os.path.expanduser("~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+        ]
+    else:
+        candidates = []
+    for path in candidates:
+        if path and os.path.exists(path):
+            return path
+    for name in ("chrome", "google-chrome", "google-chrome-stable"):
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
+
+
+def atomic_write_json(path, data):
+    """Write JSON to a temp file and atomically replace the target, so a crash never leaves a half-written file."""
+    directory = os.path.dirname(os.path.abspath(path))
+    fd, tmp_path = tempfile.mkstemp(dir=directory, prefix='.tmp_', suffix='.json')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp_path, path)
+    except BaseException:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
 def is_chrome_running():
     """Check if Chrome browser is currently running"""
     try:
         for proc in psutil.process_iter(['pid', 'name']):
             try:
-                proc_name = proc.info['name'].lower()
+                proc_name = (proc.info.get('name') or '').lower()
                 # Exclude SuperChrome.exe and chromedriver, but include actual Chrome browser
                 if ('chrome' in proc_name and 
                     'chromedriver' not in proc_name and 
@@ -1791,19 +1856,11 @@ class CreateMultipleProfilesDialog(QDialog):
     
     def open_chrome_data_directory(self):
         """Open the Chrome User Data directory in file explorer"""
-        import subprocess
-        import platform
-        import os
         
         try:
             # Determine Chrome user data directory based on OS
             system = platform.system()
-            if system == "Windows":
-                chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-            elif system == "Darwin":  # macOS
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-            else:  # Linux
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+            chrome_data_dir = get_chrome_user_data_dir()
             
             # Check if directory exists
             if not os.path.exists(chrome_data_dir):
@@ -2020,17 +2077,21 @@ class CreateMultipleProfilesDialog(QDialog):
 class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
     """Custom delegate to handle styling of deleted profiles"""
     
+    PROFILE_ID_COLUMN = 8
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.deleted_rows = set()
-    
-    def set_deleted_rows(self, deleted_rows):
-        """Set which rows contain deleted profiles"""
-        self.deleted_rows = deleted_rows
-    
+        # Keyed by profile ID, not row number, so highlighting survives sorting
+        self.deleted_profile_ids = set()
+
+    def set_deleted_profile_ids(self, deleted_profile_ids):
+        """Set which profile IDs no longer exist on disk"""
+        self.deleted_profile_ids = set(deleted_profile_ids)
+
     def paint(self, painter, option, index):
         """Custom paint method to style deleted profiles"""
-        if index.row() in self.deleted_rows:
+        profile_id = index.sibling(index.row(), self.PROFILE_ID_COLUMN).data()
+        if profile_id is not None and profile_id in self.deleted_profile_ids:
             # Fill background with light red color
             painter.fillRect(option.rect, QColor(255, 235, 235))
             
@@ -2042,14 +2103,13 @@ class DeletedProfileDelegate(QtWidgets.QStyledItemDelegate):
             if text:
                 # Draw the text with proper alignment
                 alignment = Qt.AlignmentFlag.AlignVCenter
-                if index.column() in [0, 4, 7, 8]:  # Number, Sub Type, Amount, Profile ID columns
+                if index.column() in [0, 3, 4, 6, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
                     alignment |= Qt.AlignmentFlag.AlignCenter
                     painter.drawText(option.rect, alignment, str(text))
                 else:
                     alignment |= Qt.AlignmentFlag.AlignLeft
                     # Add left margin for Name, Profile, Channel Types, Email, and Notes columns
-                    rect = option.rect
-                    rect.setLeft(rect.left() + 12)  # Add 12px left margin
+                    rect = option.rect.adjusted(12, 0, 0, 0)  # 12px left margin (copy; don't mutate option)
                     painter.drawText(rect, alignment, str(text))
         else:
             # Use default painting for non-deleted profiles
@@ -2088,14 +2148,8 @@ class ProfileValidationWorker(QThread):
     def validate_profile_exists(self, profile_id):
         if not profile_id:
             return False
-        import platform
         system = platform.system()
-        if system == "Windows":
-            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-        elif system == "Darwin":
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-        else:
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+        chrome_data_dir = get_chrome_user_data_dir()
         profile_dir = os.path.join(chrome_data_dir, profile_id)
         return os.path.exists(profile_dir)
 
@@ -2108,15 +2162,9 @@ class ChromeProfileCollectorWorker(QThread):
         super().__init__(parent)
 
     def run(self):
-        import platform
         chrome_profiles = []
         system = platform.system()
-        if system == "Windows":
-            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-        elif system == "Darwin":
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-        else:
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+        chrome_data_dir = get_chrome_user_data_dir()
 
         if not os.path.exists(chrome_data_dir):
             self.finished.emit([])
@@ -2227,14 +2275,8 @@ class ProfileDiskCreationWorker(QThread):
 
     def run(self):
         try:
-            import platform
             system = platform.system()
-            if system == "Windows":
-                chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-            elif system == "Darwin":
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-            else:
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+            chrome_data_dir = get_chrome_user_data_dir()
             
             if not os.path.exists(chrome_data_dir):
                 self.finished.emit(False, "Chrome user data directory not found")
@@ -2284,8 +2326,8 @@ class ProfileDiskCreationWorker(QThread):
             
             if created_profiles:
                 local_state['profile']['last_used'] = created_profiles[0]
-                with open(local_state_path, 'w', encoding='utf-8') as f:
-                    json.dump(local_state, f, indent=2, ensure_ascii=False)
+                # Chrome's Local State is shared by every profile; a partial write would break all of them
+                atomic_write_json(local_state_path, local_state)
                 self.finished.emit(True, f"Successfully created {len(created_profiles)} Chrome profile directories")
             else:
                 self.finished.emit(False, "No profiles were created")
@@ -2299,10 +2341,14 @@ class SamplechromeUI(QWidget):
     def __init__(self):
         super().__init__()
         self.settings = QSettings('Samplechrome', 'SamplechromeUI')
+        self._load_error_message = None
         self.config = self.load_config()
         self.profiles = self.load_profiles()
         self.init_ui()
         self.load_window_position()
+        if self._load_error_message:
+            QTimer.singleShot(0, lambda: LargeCustomMessageBox.show_warning(
+                self, "Profile Data Unreadable", self._load_error_message))
 
     def load_config(self):
         """Load configuration from config.json file"""
@@ -2339,11 +2385,13 @@ class SamplechromeUI(QWidget):
             config['sorting_preferences']['sort_field'] = self.sort_field_dropdown.currentText()
             config['sorting_preferences']['sort_order'] = self.sort_order_dropdown.currentText()
             
-            # Save updated config
-            with open('config.json', 'w', encoding='utf-8') as file:
-                json.dump(config, file, indent=2, ensure_ascii=False)
-                
-        except (FileNotFoundError, json.JSONDecodeError) as e:
+            # Skip the disk write when nothing changed (this runs on every sort)
+            if config == self.config:
+                return
+            atomic_write_json('config.json', config)
+            self.config = config
+
+        except (OSError, json.JSONDecodeError) as e:
             print(f"Error saving sorting preferences: {e}")
 
     def load_profiles(self):
@@ -2386,160 +2434,21 @@ class SamplechromeUI(QWidget):
                 profiles.sort(key=lambda profile: natural_sort_key(profile.get('profile', '')))
                 
                 return profiles
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error loading profiles: {e}")
+        except FileNotFoundError:
             return []
-
-    def get_chrome_profiles(self):
-        """Get Chrome profiles from the default Chrome user data directory"""
-        chrome_profiles = []
-        
-        # Determine Chrome user data directory based on OS
-        system = platform.system()
-        if system == "Windows":
-            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-        elif system == "Darwin":  # macOS
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-        else:  # Linux
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
-        
-        # Check if Chrome data directory exists
-        if not os.path.exists(chrome_data_dir):
-            return chrome_profiles
-        
-        # Look for Local State file to get profile info
-        local_state_path = os.path.join(chrome_data_dir, 'Local State')
-        if os.path.exists(local_state_path):
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            # Keep a copy of the unreadable file so the next save cannot silently wipe the user's data
+            backup_path = f"profile.json.corrupt-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
             try:
-                with open(local_state_path, 'r', encoding='utf-8') as f:
-                    local_state = json.load(f)
-                    profile_info = local_state.get('profile', {}).get('info_cache', {})
-                    
-                    for profile_id, profile_data in profile_info.items():
-                        profile_name = profile_data.get('name', f'Profile {profile_id}')
-                        
-                        # Try to get email from profile preferences
-                        email = self.get_profile_email(chrome_data_dir, profile_id)
-                        
-                        name = ''
-                        if email and '@' in email:
-                            name = email.split('@')[0].strip()
-                        
-                        chrome_profiles.append({
-                            'name': name,
-                            'profile': profile_name,
-                            'channel_types': ['user_custom'],
-                            'sub_types': ['Personal'],
-                            'profile_id': profile_id,
-                            'email': email,
-                            'total_channel': '',
-                            'notes': ''
-                        })
-            except (json.JSONDecodeError, KeyError) as e:
-                print(f"Error reading Chrome profiles: {e}")
-        
-        return chrome_profiles
-
-    def get_profile_email(self, chrome_data_dir, profile_id):
-        """Extract email from Chrome profile using multiple methods"""
-        email = ''
-        
-        # Method 1: Try to get email from Local State file (most reliable)
-        try:
-            local_state_path = os.path.join(chrome_data_dir, 'Local State')
-            if os.path.exists(local_state_path):
-                with open(local_state_path, 'r', encoding='utf-8') as f:
-                    local_state = json.load(f)
-                    profile_info = local_state.get('profile', {}).get('info_cache', {})
-                    
-                    if profile_id in profile_info:
-                        profile_data = profile_info[profile_id]
-                        
-                        # Check user_name field (often contains email)
-                        user_name = profile_data.get('user_name', '')
-                        if user_name and '@' in user_name:
-                            email = user_name
-                        
-                        # Check gaia_id (Google account ID)
-                        gaia_id = profile_data.get('gaia_id', '')
-                        if gaia_id and not email:
-                            # Try to extract email from gaia_id or related fields
-                            pass
-        except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
-            print(f"Error reading Local State for profile {profile_id}: {e}")
-        
-        # Method 2: Try to get email from profile preferences file
-        if not email:
-            try:
-                preferences_path = os.path.join(chrome_data_dir, profile_id, 'Preferences')
-                
-                if os.path.exists(preferences_path):
-                    with open(preferences_path, 'r', encoding='utf-8') as f:
-                        preferences = json.load(f)
-                        
-                        # Check account_id_migration_state (this is typically an integer, not a dict)
-                        account_migration_state = preferences.get('account_id_migration_state', 0)
-                        # Skip this check as it's just a state number, not email data
-                        
-                        # Check profile content settings
-                        if not email:
-                            profile = preferences.get('profile', {})
-                            if profile:
-                                email = profile.get('email_address', '')
-                        
-                        # Check signin
-                        if not email:
-                            signin = preferences.get('signin', {})
-                            if signin:
-                                email = signin.get('email', '')
-                        
-                        # Check account_tracker_service
-                        if not email:
-                            account_tracker = preferences.get('account_tracker_service', {})
-                            if account_tracker:
-                                accounts = account_tracker.get('accounts', {})
-                                for account_id, account_data in accounts.items():
-                                    if isinstance(account_data, dict) and 'email' in account_data:
-                                        email = account_data['email']
-                                        break
-                        
-                        # Check identity
-                        if not email:
-                            identity = preferences.get('identity', {})
-                            if identity:
-                                email = identity.get('primary_account_email', '')
-                        
-                        # Check sync
-                        if not email:
-                            sync = preferences.get('sync', {})
-                            if sync:
-                                email = sync.get('requested', {}).get('email', '')
-            except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
-                print(f"Error reading preferences for profile {profile_id}: {e}")
-        
-        # Method 3: Try to get email from Secure Preferences file
-        if not email:
-            try:
-                secure_preferences_path = os.path.join(chrome_data_dir, profile_id, 'Secure Preferences')
-                
-                if os.path.exists(secure_preferences_path):
-                    with open(secure_preferences_path, 'r', encoding='utf-8') as f:
-                        secure_preferences = json.load(f)
-                        
-                        # Check account_id_migration_state in secure preferences
-                        account_migration = secure_preferences.get('account_id_migration_state', {})
-                        if account_migration:
-                            email = account_migration.get('email', '')
-                        
-                        # Check profile in secure preferences
-                        if not email:
-                            profile = secure_preferences.get('profile', {})
-                            if profile:
-                                email = profile.get('email_address', '')
-            except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
-                print(f"Error reading Secure Preferences for profile {profile_id}: {e}")
-        
-        return email.strip() if email else ''
+                shutil.copy2('profile.json', backup_path)
+            except OSError:
+                backup_path = None
+            print(f"Error loading profiles: {e}")
+            self._load_error_message = (
+                "profile.json could not be read and was ignored.\n\n"
+                + (f"A backup was saved as:\n{backup_path}" if backup_path else "A backup could not be created.")
+            )
+            return []
 
     def validate_profile_exists(self, profile_id):
         """Check if a Chrome profile actually exists on disk"""
@@ -2547,12 +2456,7 @@ class SamplechromeUI(QWidget):
             return False
             
         system = platform.system()
-        if system == "Windows":
-            chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-        elif system == "Darwin":  # macOS
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-        else:  # Linux
-            chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+        chrome_data_dir = get_chrome_user_data_dir()
         
         # Check if the profile directory exists
         profile_dir = os.path.join(chrome_data_dir, profile_id)
@@ -2613,8 +2517,7 @@ class SamplechromeUI(QWidget):
     def save_profiles(self, profiles):
         """Save profiles to profile.json file"""
         try:
-            with open('profile.json', 'w', encoding='utf-8') as file:
-                json.dump({'profiles': profiles}, file, indent=2, ensure_ascii=False)
+            atomic_write_json('profile.json', {'profiles': profiles})
             return True
         except Exception as e:
             print(f"Error saving profiles: {e}")
@@ -3449,17 +3352,24 @@ class SamplechromeUI(QWidget):
         finally:
             self.profiles_table.setUpdatesEnabled(True)
         
-        # Update the custom delegate with deleted rows
-        if hasattr(self, 'table_delegate'):
-            self.table_delegate.set_deleted_rows(deleted_rows)
-        
+        # Update the custom delegate with deleted profiles (only when we actually validated;
+        # otherwise keep the last known state until background validation finishes)
+        if hasattr(self, 'table_delegate') and not skip_validation:
+            self.table_delegate.set_deleted_profile_ids(
+                self.profiles[r].get('profile_id', '') for r in deleted_rows)
+
         # Force the table to update its styling
         self.profiles_table.viewport().update()
-        
+
         # Update filter options
         self.update_channel_type_filter_options()
         self.update_sub_type_filter_options()
-        
+
+        # Keep the user's chosen sort order and active filters after a refresh
+        if hasattr(self, 'sort_field_dropdown'):
+            self.apply_current_sort()
+        self.filter_profiles_table()
+
         # Select the first row if there are profiles
         if self.profiles_table.rowCount() > 0:
             self.profiles_table.setCurrentCell(0, 0)
@@ -3473,7 +3383,8 @@ class SamplechromeUI(QWidget):
     def on_validation_finished(self, profiles, deleted_rows):
         """Callback for when background validation finishes"""
         if hasattr(self, 'table_delegate'):
-            self.table_delegate.set_deleted_rows(deleted_rows)
+            self.table_delegate.set_deleted_profile_ids(
+                profiles[r].get('profile_id', '') for r in deleted_rows)
         # Force update styling of the table
         self.profiles_table.viewport().update()
 
@@ -3519,8 +3430,8 @@ class SamplechromeUI(QWidget):
         sub_type_filter = self.sub_type_filter.currentText()
         
         # If all filters are empty, show all profiles
-        if (not search_text and 
-            channel_type_filter == "All Channel Types" and 
+        if (not search_text and
+            channel_type_filter == "All types" and
             sub_type_filter == "All Sub types"):
             for row in range(self.profiles_table.rowCount()):
                 self.profiles_table.setRowHidden(row, False)
@@ -3619,7 +3530,12 @@ class SamplechromeUI(QWidget):
         menu.exec(self.search_input.mapToGlobal(pos))
 
     def sort_profiles_table(self):
-        """Sort the profiles table based on selected field and order"""
+        """Sort the profiles table based on selected field and order, and remember the choice"""
+        self.apply_current_sort()
+        self.save_sorting_preferences()
+
+    def apply_current_sort(self):
+        """Re-apply the sort chosen in the dropdowns without touching config.json"""
         sort_field = self.sort_field_dropdown.currentText()
         sort_order = self.sort_order_dropdown.currentText()
         
@@ -3654,9 +3570,6 @@ class SamplechromeUI(QWidget):
             else:
                 # Custom sorting to handle empty values last for all columns
                 self.custom_sort_column(column_index, reverse_order)
-        
-        # Save sorting preferences after sorting
-        self.save_sorting_preferences()
 
     def custom_sort_profile_id_column(self, reverse_order=False):
         """Custom sort for Profile ID column using natural sorting"""
@@ -3738,16 +3651,14 @@ class SamplechromeUI(QWidget):
             
             # Store the mapping of table rows to profile indices
             self.table_row_to_profile_index = {}
-            
+            index_by_profile_id = {}
+            for i, profile in enumerate(self.profiles):
+                index_by_profile_id.setdefault(profile.get('profile_id', ''), i)
+
             for row, row_data in enumerate(rows_data):
                 # Find the original profile index by matching profile_id
-                profile_id = row_data[8]  # Profile ID column
-                original_index = None
-                for i, profile in enumerate(self.profiles):
-                    if profile.get('profile_id', '') == profile_id:
-                        original_index = i
-                        break
-                
+                original_index = index_by_profile_id.get(row_data[8])  # Profile ID column
+
                 if original_index is not None:
                     self.table_row_to_profile_index[row] = original_index
                 
@@ -3757,13 +3668,17 @@ class SamplechromeUI(QWidget):
                     if item is None:
                         item = QTableWidgetItem(display_text)
                         # Apply center alignment for specific columns
-                        if col in [0, 3, 4, 7, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
+                        if col in [0, 3, 4, 6, 8]:  # Number, Channel Types, Sub Type, Amount, Profile ID columns
                             item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                         self.profiles_table.setItem(row, col, item)
                     else:
                         item.setText(display_text)
         finally:
             self.profiles_table.setUpdatesEnabled(True)
+
+        # Row visibility is per row index, so re-run the filter on the reordered rows
+        self.filter_profiles_table()
+        self.profiles_table.viewport().update()
 
     def on_header_clicked(self, logical_index):
         """Handle header clicks for sorting"""
@@ -3976,24 +3891,15 @@ class SamplechromeUI(QWidget):
 
     def get_current_timestamp(self):
         """Get current timestamp in a readable format"""
-        from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def open_chrome_data_directory(self):
         """Open the Chrome User Data directory in file explorer"""
-        import subprocess
-        import platform
-        import os
         
         try:
             # Determine Chrome user data directory based on OS
             system = platform.system()
-            if system == "Windows":
-                chrome_data_dir = os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Google', 'Chrome', 'User Data')
-            elif system == "Darwin":  # macOS
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'Google', 'Chrome')
-            else:  # Linux
-                chrome_data_dir = os.path.join(os.path.expanduser('~'), '.config', 'google-chrome')
+            chrome_data_dir = get_chrome_user_data_dir()
             
             # Check if directory exists
             if not os.path.exists(chrome_data_dir):
@@ -4250,28 +4156,18 @@ class SamplechromeUI(QWidget):
             return
         
         try:
-            # Launch Chrome with the selected profile
-            import subprocess
-            import platform
-            
-            system = platform.system()
-            if system == "Windows":
-                chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-                if not os.path.exists(chrome_path):
-                    chrome_path = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-            elif system == "Darwin":  # macOS
-                chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-            else:  # Linux
-                chrome_path = "google-chrome"
-            
-            if not os.path.exists(chrome_path) and system != "Linux":
-                CustomMessageBox.show_error(self, "Chrome Not Found", 
+            chrome_path = find_chrome_executable()
+            if not chrome_path:
+                CustomMessageBox.show_error(self, "Chrome Not Found",
                                           "Google Chrome is not installed or not found in the default location.")
                 return
-            
-            # Launch Chrome with the profile
+
+            # Launch Chrome with the profile (CREATE_NO_WINDOW only exists on Windows)
             cmd = [chrome_path, f"--profile-directory={profile_id}"]
-            subprocess.Popen(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
+            popen_kwargs = {}
+            if platform.system() == "Windows":
+                popen_kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+            subprocess.Popen(cmd, **popen_kwargs)
             
             # No success dialog needed - profile launches silently
             
@@ -4356,6 +4252,9 @@ class SamplechromeUI(QWidget):
 
 def main():
     """Main function to run the sample application"""
+    # All data/asset paths (config.json, profile.json, src/...) are relative; resolve them
+    # against the app folder so launching from a shortcut or another directory works.
+    os.chdir(app_base_dir())
     app = QApplication(sys.argv)
     
     # Create and show the main window

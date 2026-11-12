@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# PyInstaller intermediate output (release builds live in dist/)
+build/
+
+# Runtime / debug files
+debug_output.txt
+profile.json.corrupt-*
+.tmp_*.json

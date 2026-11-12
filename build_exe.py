@@ -11,25 +11,27 @@ import shutil
 import ctypes
 from pathlib import Path
 
-def check_pyinstaller():
-    """Check if PyInstaller is installed"""
+# Build-time packages: (import name, pip name).
+# Pillow is required so PyInstaller can convert src/icon.png into a Windows .ico.
+BUILD_REQUIREMENTS = [
+    ("PyInstaller", "pyinstaller"),
+    ("PIL", "Pillow"),
+]
+
+def ensure_package(import_name, pip_name):
+    """Make sure a package is importable, installing it with pip if needed"""
     try:
-        import PyInstaller
-        print("[OK] PyInstaller is installed")
+        __import__(import_name)
+        print(f"[OK] {pip_name} is installed")
         return True
     except ImportError:
-        print("[WARN] PyInstaller is not installed")
-        return False
-
-def install_pyinstaller():
-    """Install PyInstaller if not present"""
-    print("Installing PyInstaller...")
+        print(f"[WARN] {pip_name} is not installed, installing...")
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
-        print("[OK] PyInstaller installed successfully")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name])
+        print(f"[OK] {pip_name} installed successfully")
         return True
     except subprocess.CalledProcessError:
-        print("[ERROR] Failed to install PyInstaller")
+        print(f"[ERROR] Failed to install {pip_name}. Install it manually: pip install {pip_name}")
         return False
 
 def build_executable():
@@ -242,7 +244,6 @@ def copy_additional_files():
     files_to_copy = [
         "config.json",
         "profile.json",
-        "down_arrow.svg"
     ]
     
     for file_name in files_to_copy:
@@ -255,28 +256,13 @@ def copy_additional_files():
         else:
             print(f"[WARN] {file_name} not found, skipping...")
     
-    # Create src folder in exe directory and copy src/icon.png into it
-    exe_src_dir = dist_dir / "src"
-    exe_src_dir.mkdir(exist_ok=True)
-    print("[OK] Created src folder in exe directory")
-    
-    # Copy icon.png
-    icon_src = current_dir / "src" / "icon.png"
-    icon_dst = exe_src_dir / "icon.png"  # Put it in the created src folder
-    if icon_src.exists():
-        shutil.copy2(icon_src, icon_dst)
-        print("[OK] Copied src/icon.png to exe/src/icon.png")
+    # Copy the whole src folder (icons and SVGs such as black_tick.svg used by the stylesheet)
+    src_dir = current_dir / "src"
+    if src_dir.exists():
+        shutil.copytree(src_dir, dist_dir / "src", dirs_exist_ok=True)
+        print("[OK] Copied src/ folder to exe directory")
     else:
-        print("[WARN] src/icon.png not found, skipping copy...")
-    
-    # Copy icon2.png
-    icon2_src = current_dir / "src" / "icon2.png"
-    icon2_dst = exe_src_dir / "icon2.png"
-    if icon2_src.exists():
-        shutil.copy2(icon2_src, icon2_dst)
-        print("[OK] Copied src/icon2.png to exe/src/icon2.png")
-    else:
-        print("[WARN] src/icon2.png not found, skipping copy...")
+        print("[WARN] src/ folder not found, skipping copy...")
 
     # Create antivirus information file
     create_antivirus_readme()
@@ -293,11 +279,9 @@ def main():
     print("SuperChrome Executable Builder")
     print("=" * 50)
     
-    # Check and install PyInstaller if needed
-    if not check_pyinstaller():
-        if not install_pyinstaller():
-            print("Failed to install PyInstaller. Please install it manually:")
-            print("pip install pyinstaller")
+    # Check and install build tools if needed
+    for import_name, pip_name in BUILD_REQUIREMENTS:
+        if not ensure_package(import_name, pip_name):
             return False
     
     # Build the executable
