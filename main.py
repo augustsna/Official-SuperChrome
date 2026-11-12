@@ -33,6 +33,11 @@ from PyQt6.QtGui import QIcon, QPixmap, QColor
 WINDOW_SIZE = (760, 577)
 WINDOW_TITLE = "SuperChrome - Chrome Profile Manager"
 ICON_PATH = "src/icon.png"
+TITLE_ICON_PATH = "src/chrome_icon.png"
+# Window/taskbar icon. build_exe.py embeds this same image in SuperChrome.exe
+# (TASKBAR_ICON_SOURCE) so pinned and running taskbar buttons show the same icon.
+TASKBAR_ICON_PATH = "src/icon.png"
+APP_USER_MODEL_ID = "SuperChrome.ProfileManager"
 PROJECT_ROOT = "."
 
 
@@ -2536,11 +2541,11 @@ class SamplechromeUI(QWidget):
         self.setStyleSheet(STYLE_SHEET)
         
         # Set window icon (taskbar icon)
-        taskbar_icon_path = os.path.join(PROJECT_ROOT, "src/icon2.png")
+        taskbar_icon_path = os.path.join(PROJECT_ROOT, TASKBAR_ICON_PATH)
         if os.path.exists(taskbar_icon_path):
             self.setWindowIcon(QIcon(taskbar_icon_path))
         else:
-            # Fallback to default icon if icon2.png doesn't exist
+            # Fallback to default icon if the taskbar icon is missing
             icon_path = os.path.join(PROJECT_ROOT, ICON_PATH)
             if os.path.exists(icon_path):
                 self.setWindowIcon(QIcon(icon_path))
@@ -2573,7 +2578,7 @@ class SamplechromeUI(QWidget):
         
         # Title icon (keep original icon for title area)
         title_icon = QLabel()
-        icon_path = os.path.join(PROJECT_ROOT, ICON_PATH)
+        icon_path = os.path.join(PROJECT_ROOT, TITLE_ICON_PATH)
         if os.path.exists(icon_path):
             title_icon.setPixmap(QPixmap(icon_path).scaled(45, 45, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         else:
@@ -4255,7 +4260,21 @@ def main():
     # All data/asset paths (config.json, profile.json, src/...) are relative; resolve them
     # against the app folder so launching from a shortcut or another directory works.
     os.chdir(app_base_dir())
+
+    # When run from source, Windows would group the window under python.exe (Python's icon).
+    # Give it its own taskbar identity. Not done for the frozen exe: there Windows already
+    # identifies it by SuperChrome.exe, and an explicit ID would stop the running window
+    # from merging with a button pinned from the exe in Explorer.
+    if platform.system() == "Windows" and not getattr(sys, 'frozen', False):
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
+        except Exception:
+            pass
+
     app = QApplication(sys.argv)
+    if os.path.exists(TASKBAR_ICON_PATH):
+        app.setWindowIcon(QIcon(TASKBAR_ICON_PATH))
     
     # Create and show the main window
     window = SamplechromeUI()

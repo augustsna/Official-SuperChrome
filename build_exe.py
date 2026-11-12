@@ -34,16 +34,33 @@ def ensure_package(import_name, pip_name):
         print(f"[ERROR] Failed to install {pip_name}. Install it manually: pip install {pip_name}")
         return False
 
+# The exe icon MUST be the same image main.py uses for the window icon (TASKBAR_ICON_PATH).
+# Windows shows the exe's embedded icon for a pinned taskbar button and the window icon
+# while the app runs, so if these differ the button switches icons on launch/close.
+TASKBAR_ICON_SOURCE = Path("src") / "icon.png"
+ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
+
+def make_ico(png_path, ico_path):
+    """Convert a PNG into a multi-resolution .ico so the taskbar icon is crisp at every DPI"""
+    from PIL import Image
+    with Image.open(png_path) as img:
+        img = img.convert("RGBA")
+        # Pillow only writes sizes <= the source image, so upscale small sources to 256 first
+        if max(img.size) < 256:
+            img = img.resize((256, 256), Image.LANCZOS)
+        img.save(ico_path, format="ICO", sizes=[(s, s) for s in ICO_SIZES])
+
 def build_executable():
     """Build the executable using PyInstaller"""
     print("Building executable...")
-    
+
     # Get the current directory
     current_dir = Path.cwd()
-    icon_path = current_dir / "src" / "icon.png"
+    icon_source = current_dir / TASKBAR_ICON_SOURCE
     main_script = current_dir / "main.py"
     build_dir = current_dir / "build"
     build_dir.mkdir(exist_ok=True)
+    icon_path = build_dir / "SuperChrome.ico"
     
     # Try to clean up dist directory if it exists (handle permission errors gracefully)
     dist_dir = current_dir / "dist" / "SuperChrome"
@@ -97,8 +114,14 @@ VSVersionInfo(
         print(f"[WARN] Failed to write version info file: {e}")
     
     # Check if required files exist
-    if not icon_path.exists():
-        print(f"[ERROR] Icon file not found: {icon_path}")
+    if not icon_source.exists():
+        print(f"[ERROR] Icon file not found: {icon_source}")
+        return False
+    try:
+        make_ico(icon_source, icon_path)
+        print(f"[OK] Created {icon_path.name} from {TASKBAR_ICON_SOURCE}")
+    except Exception as e:
+        print(f"[ERROR] Failed to create .ico from {icon_source}: {e}")
         return False
     
     if not main_script.exists():

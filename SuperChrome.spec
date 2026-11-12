@@ -33,7 +33,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     version='C:/Users/Rome/Documents/GitHub/Official-SuperChrome/build/version_info.txt',
-    icon=['C:/Users/Rome/Documents/GitHub/Official-SuperChrome/src/icon.png'],
+    icon=['C:/Users/Rome/Documents/GitHub/Official-SuperChrome/build/SuperChrome.ico'],
 )
 coll = COLLECT(
     exe,
